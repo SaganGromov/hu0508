@@ -1,0 +1,8 @@
+# Nested independent repos (own remotes)
+/acr-controle-acesso-dashboard/
+/deploy-acr-controle-acesso-dashboard/
+# Legacy folder
+/NEW_HU_072026/
+# Python caches / build artifacts
+**/__pycache__/
+*.egg-info/

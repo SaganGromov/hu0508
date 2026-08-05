@@ -1,0 +1,1036 @@
+{
+  "generated_at": "2026-07-15 14:44:28.120126",
+  "parameters": {
+    "start": "2026-06-01 00:00:00",
+    "end": "2026-07-01 00:00:00",
+    "vpn_table": "DB2PEP.AUT_CPTV",
+    "physical_table": null,
+    "active_window_hours": 8,
+    "distinct_limit": 2,
+    "daily_login_limit": 10,
+    "sample_limit": 50
+  },
+  "metrics": {
+    "total_events_analyzed": 569299,
+    "total_users_analyzed": 33708,
+    "vpn_classified_cases": 569299,
+    "false_positive_rate": "not_available_without_validated_labels",
+    "false_negative_rate": "not_available_without_validated_labels"
+  },
+  "cases": [
+    {
+      "name": "Mais de N IPs por usuario",
+      "status": "ok",
+      "count": 50,
+      "sample": [
+        {
+          "USER_KEY": "F0737998",
+          "EVENTS": 213,
+          "DISTINCT_1": 14,
+          "DISTINCT_2": 191
+        },
+        {
+          "USER_KEY": "F8458999",
+          "EVENTS": 153,
+          "DISTINCT_1": 2,
+          "DISTINCT_2": 143
+        },
+        {
+          "USER_KEY": "F4324234",
+          "EVENTS": 145,
+          "DISTINCT_1": 1,
+          "DISTINCT_2": 128
+        },
+        {
+          "USER_KEY": "F6817053",
+          "EVENTS": 141,
+          "DISTINCT_1": 7,
+          "DISTINCT_2": 135
+        },
+        {
+          "USER_KEY": "F0724261",
+          "EVENTS": 137,
+          "DISTINCT_1": 8,
+          "DISTINCT_2": 117
+        },
+        {
+          "USER_KEY": "F3877345",
+          "EVENTS": 136,
+          "DISTINCT_1": 8,
+          "DISTINCT_2": 129
+        },
+        {
+          "USER_KEY": "F6880964",
+          "EVENTS": 128,
+          "DISTINCT_1": 7,
+          "DISTINCT_2": 120
+        },
+        {
+          "USER_KEY": "F9170469",
+          "EVENTS": 122,
+          "DISTINCT_1": 1,
+          "DISTINCT_2": 116
+        },
+        {
+          "USER_KEY": "F6750699",
+          "EVENTS": 116,
+          "DISTINCT_1": 17,
+          "DISTINCT_2": 111
+        },
+        {
+          "USER_KEY": "F6212353",
+          "EVENTS": 115,
+          "DISTINCT_1": 6,
+          "DISTINCT_2": 107
+        },
+        {
+          "USER_KEY": "F2080238",
+          "EVENTS": 114,
+          "DISTINCT_1": 11,
+          "DISTINCT_2": 111
+        },
+        {
+          "USER_KEY": "F1963929",
+          "EVENTS": 111,
+          "DISTINCT_1": 11,
+          "DISTINCT_2": 86
+        },
+        {
+          "USER_KEY": "F1653995",
+          "EVENTS": 109,
+          "DISTINCT_1": 2,
+          "DISTINCT_2": 100
+        },
+        {
+          "USER_KEY": "F3514379",
+          "EVENTS": 100,
+          "DISTINCT_1": 53,
+          "DISTINCT_2": 89
+        },
+        {
+          "USER_KEY": "F0055379",
+          "EVENTS": 100,
+          "DISTINCT_1": 4,
+          "DISTINCT_2": 95
+        },
+        {
+          "USER_KEY": "F9839343",
+          "EVENTS": 99,
+          "DISTINCT_1": 6,
+          "DISTINCT_2": 90
+        },
+        {
+          "USER_KEY": "F3288689",
+          "EVENTS": 99,
+          "DISTINCT_1": 23,
+          "DISTINCT_2": 75
+        },
+        {
+          "USER_KEY": "F6365418",
+          "EVENTS": 96,
+          "DISTINCT_1": 5,
+          "DISTINCT_2": 87
+        },
+        {
+          "USER_KEY": "F7092858",
+          "EVENTS": 95,
+          "DISTINCT_1": 1,
+          "DISTINCT_2": 82
+        },
+        {
+          "USER_KEY": "F6770283",
+          "EVENTS": 93,
+          "DISTINCT_1": 5,
+          "DISTINCT_2": 84
+        },
+        {
+          "USER_KEY": "F1692871",
+          "EVENTS": 92,
+          "DISTINCT_1": 7,
+          "DISTINCT_2": 88
+        },
+        {
+          "USER_KEY": "F9441639",
+          "EVENTS": 89,
+          "DISTINCT_1": 1,
+          "DISTINCT_2": 85
+        },
+        {
+          "USER_KEY": "F8988459",
+          "EVENTS": 88,
+          "DISTINCT_1": 2,
+          "DISTINCT_2": 83
+        },
+        {
+          "USER_KEY": "F6811925",
+          "EVENTS": 88,
+          "DISTINCT_1": 8,
+          "DISTINCT_2": 81
+        },
+        {
+          "USER_KEY": "F4839099",
+          "EVENTS": 88,
+          "DISTINCT_1": 4,
+          "DISTINCT_2": 82
+        },
+        {
+          "USER_KEY": "F2483319",
+          "EVENTS": 87,
+          "DISTINCT_1": 9,
+          "DISTINCT_2": 79
+        },
+        {
+          "USER_KEY": "F8200831",
+          "EVENTS": 83,
+          "DISTINCT_1": 14,
+          "DISTINCT_2": 81
+        },
+        {
+          "USER_KEY": "F4437749",
+          "EVENTS": 81,
+          "DISTINCT_1": 41,
+          "DISTINCT_2": 76
+        },
+        {
+          "USER_KEY": "F8600998",
+          "EVENTS": 81,
+          "DISTINCT_1": 8,
+          "DISTINCT_2": 75
+        },
+        {
+          "USER_KEY": "F1461319",
+          "EVENTS": 81,
+          "DISTINCT_1": 3,
+          "DISTINCT_2": 80
+        },
+        {
+          "USER_KEY": "F9329189",
+          "EVENTS": 80,
+          "DISTINCT_1": 5,
+          "DISTINCT_2": 71
+        },
+        {
+          "USER_KEY": "F6813769",
+          "EVENTS": 80,
+          "DISTINCT_1": 3,
+          "DISTINCT_2": 75
+        },
+        {
+          "USER_KEY": "C1317405",
+          "EVENTS": 80,
+          "DISTINCT_1": 7,
+          "DISTINCT_2": 74
+        },
+        {
+          "USER_KEY": "C1333663",
+          "EVENTS": 79,
+          "DISTINCT_1": 5,
+          "DISTINCT_2": 70
+        },
+        {
+          "USER_KEY": "F6794003",
+          "EVENTS": 78,
+          "DISTINCT_1": 1,
+          "DISTINCT_2": 73
+        },
+        {
+          "USER_KEY": "F2258674",
+          "EVENTS": 78,
+          "DISTINCT_1": 3,
+          "DISTINCT_2": 76
+        },
+        {
+          "USER_KEY": "F6075077",
+          "EVENTS": 77,
+          "DISTINCT_1": 2,
+          "DISTINCT_2": 67
+        },
+        {
+          "USER_KEY": "F1553419",
+          "EVENTS": 77,
+          "DISTINCT_1": 8,
+          "DISTINCT_2": 73
+        },
+        {
+          "USER_KEY": "F8789824",
+          "EVENTS": 76,
+          "DISTINCT_1": 1,
+          "DISTINCT_2": 70
+        },
+        {
+          "USER_KEY": "F9197989",
+          "EVENTS": 76,
+          "DISTINCT_1": 20,
+          "DISTINCT_2": 65
+        },
+        {
+          "USER_KEY": "F2100394",
+          "EVENTS": 76,
+          "DISTINCT_1": 4,
+          "DISTINCT_2": 64
+        },
+        {
+          "USER_KEY": "F1809315",
+          "EVENTS": 76,
+          "DISTINCT_1": 34,
+          "DISTINCT_2": 75
+        },
+        {
+          "USER_KEY": "F6001506",
+          "EVENTS": 75,
+          "DISTINCT_1": 8,
+          "DISTINCT_2": 70
+        },
+        {
+          "USER_KEY": "F1729968",
+          "EVENTS": 75,
+          "DISTINCT_1": 6,
+          "DISTINCT_2": 68
+        },
+        {
+          "USER_KEY": "F6770080",
+          "EVENTS": 74,
+          "DISTINCT_1": 7,
+          "DISTINCT_2": 72
+        },
+        {
+          "USER_KEY": "F6854748",
+          "EVENTS": 74,
+          "DISTINCT_1": 7,
+          "DISTINCT_2": 69
+        },
+        {
+          "USER_KEY": "F6322452",
+          "EVENTS": 74,
+          "DISTINCT_1": 2,
+          "DISTINCT_2": 69
+        },
+        {
+          "USER_KEY": "F0742785",
+          "EVENTS": 74,
+          "DISTINCT_1": 4,
+          "DISTINCT_2": 70
+        },
+        {
+          "USER_KEY": "F6324513",
+          "EVENTS": 73,
+          "DISTINCT_1": 5,
+          "DISTINCT_2": 68
+        },
+        {
+          "USER_KEY": "F2255372",
+          "EVENTS": 73,
+          "DISTINCT_1": 2,
+          "DISTINCT_2": 70
+        }
+      ],
+      "note": "Limite atual: mais de 2 IPs distintos."
+    },
+    {
+      "name": "Mais de N hostnames por usuario",
+      "status": "ok",
+      "count": 35,
+      "sample": [
+        {
+          "USER_KEY": "F2724978",
+          "EVENTS": 65,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F4111558",
+          "EVENTS": 54,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F3248859",
+          "EVENTS": 49,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F0126473",
+          "EVENTS": 45,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F9540122",
+          "EVENTS": 44,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F6367825",
+          "EVENTS": 44,
+          "DISTINCT_1": 4
+        },
+        {
+          "USER_KEY": "F0173117",
+          "EVENTS": 43,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F0739958",
+          "EVENTS": 42,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "C1338505",
+          "EVENTS": 38,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F0428064",
+          "EVENTS": 37,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F2844150",
+          "EVENTS": 36,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "C1346938",
+          "EVENTS": 34,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F2331645",
+          "EVENTS": 33,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F6325640",
+          "EVENTS": 29,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F8367535",
+          "EVENTS": 28,
+          "DISTINCT_1": 4
+        },
+        {
+          "USER_KEY": "C1323613",
+          "EVENTS": 28,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F9539140",
+          "EVENTS": 27,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F9795481",
+          "EVENTS": 25,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F9522678",
+          "EVENTS": 25,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F4619409",
+          "EVENTS": 25,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F8712819",
+          "EVENTS": 20,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F6027638",
+          "EVENTS": 20,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F9181073",
+          "EVENTS": 19,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F1807402",
+          "EVENTS": 17,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F2965002",
+          "EVENTS": 16,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F9275903",
+          "EVENTS": 14,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F6446781",
+          "EVENTS": 14,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F3548944",
+          "EVENTS": 13,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F8712541",
+          "EVENTS": 12,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F1709156",
+          "EVENTS": 11,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "Z1174850",
+          "EVENTS": 10,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F1557388",
+          "EVENTS": 10,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F0743820",
+          "EVENTS": 10,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F1832821",
+          "EVENTS": 9,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F7055892",
+          "EVENTS": 5,
+          "DISTINCT_1": 3
+        }
+      ],
+      "note": "Limite atual: mais de 2 hostnames distintos."
+    },
+    {
+      "name": "Mais de N dispositivos por usuario",
+      "status": "ok",
+      "count": 50,
+      "sample": [
+        {
+          "USER_KEY": "C1343461",
+          "EVENTS": 68,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F6323258",
+          "EVENTS": 66,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F2724978",
+          "EVENTS": 65,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F4111558",
+          "EVENTS": 54,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F5078775",
+          "EVENTS": 53,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F3248859",
+          "EVENTS": 49,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F0126473",
+          "EVENTS": 45,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F9540122",
+          "EVENTS": 44,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F6367825",
+          "EVENTS": 44,
+          "DISTINCT_1": 4
+        },
+        {
+          "USER_KEY": "F0173117",
+          "EVENTS": 43,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F8116033",
+          "EVENTS": 42,
+          "DISTINCT_1": 5
+        },
+        {
+          "USER_KEY": "F0739958",
+          "EVENTS": 42,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "C1338505",
+          "EVENTS": 38,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F0428064",
+          "EVENTS": 37,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F2877787",
+          "EVENTS": 36,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F2844150",
+          "EVENTS": 36,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F2331645",
+          "EVENTS": 33,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "C1323554",
+          "EVENTS": 33,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F6320854",
+          "EVENTS": 32,
+          "DISTINCT_1": 4
+        },
+        {
+          "USER_KEY": "F9342575",
+          "EVENTS": 30,
+          "DISTINCT_1": 4
+        },
+        {
+          "USER_KEY": "F6325640",
+          "EVENTS": 29,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F8528034",
+          "EVENTS": 29,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F2455215",
+          "EVENTS": 29,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F8367535",
+          "EVENTS": 28,
+          "DISTINCT_1": 4
+        },
+        {
+          "USER_KEY": "C1323613",
+          "EVENTS": 28,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F9539140",
+          "EVENTS": 27,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F8223718",
+          "EVENTS": 26,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F8711688",
+          "EVENTS": 26,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F3800598",
+          "EVENTS": 26,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F9522678",
+          "EVENTS": 25,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F9795481",
+          "EVENTS": 25,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F4619409",
+          "EVENTS": 25,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F8029529",
+          "EVENTS": 23,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F2690779",
+          "EVENTS": 22,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F8712819",
+          "EVENTS": 20,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F6027638",
+          "EVENTS": 20,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F9181073",
+          "EVENTS": 19,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F0650998",
+          "EVENTS": 19,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F1785201",
+          "EVENTS": 18,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F1807402",
+          "EVENTS": 17,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F8944556",
+          "EVENTS": 16,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F2965002",
+          "EVENTS": 16,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F0740996",
+          "EVENTS": 16,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F3830367",
+          "EVENTS": 15,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F9275903",
+          "EVENTS": 14,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F6446781",
+          "EVENTS": 14,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F7002571",
+          "EVENTS": 13,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F3548944",
+          "EVENTS": 13,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F6001741",
+          "EVENTS": 11,
+          "DISTINCT_1": 3
+        },
+        {
+          "USER_KEY": "F1709156",
+          "EVENTS": 11,
+          "DISTINCT_1": 3
+        }
+      ],
+      "note": "Limite atual: mais de 2 dispositivos distintos."
+    },
+    {
+      "name": "Quantidade de logins VPN por dia acima do limite",
+      "status": "ok",
+      "count": 50,
+      "sample": [
+        {
+          "USER_KEY": "F7092858",
+          "EVENT_DATE": "2026-06-01",
+          "LOGIN_COUNT": 56
+        },
+        {
+          "USER_KEY": "F0225651",
+          "EVENT_DATE": "2026-06-01",
+          "LOGIN_COUNT": 44
+        },
+        {
+          "USER_KEY": "F9441639",
+          "EVENT_DATE": "2026-06-15",
+          "LOGIN_COUNT": 37
+        },
+        {
+          "USER_KEY": "C1342810",
+          "EVENT_DATE": "2026-06-11",
+          "LOGIN_COUNT": 36
+        },
+        {
+          "USER_KEY": "F9524438",
+          "EVENT_DATE": "2026-06-11",
+          "LOGIN_COUNT": 33
+        },
+        {
+          "USER_KEY": "F8988459",
+          "EVENT_DATE": "2026-06-23",
+          "LOGIN_COUNT": 33
+        },
+        {
+          "USER_KEY": "F3523957",
+          "EVENT_DATE": "2026-06-02",
+          "LOGIN_COUNT": 31
+        },
+        {
+          "USER_KEY": "F5971139",
+          "EVENT_DATE": "2026-06-27",
+          "LOGIN_COUNT": 29
+        },
+        {
+          "USER_KEY": "F6581949",
+          "EVENT_DATE": "2026-06-07",
+          "LOGIN_COUNT": 28
+        },
+        {
+          "USER_KEY": "F8282979",
+          "EVENT_DATE": "2026-06-29",
+          "LOGIN_COUNT": 27
+        },
+        {
+          "USER_KEY": "F1839241",
+          "EVENT_DATE": "2026-06-12",
+          "LOGIN_COUNT": 27
+        },
+        {
+          "USER_KEY": "F0722359",
+          "EVENT_DATE": "2026-06-24",
+          "LOGIN_COUNT": 26
+        },
+        {
+          "USER_KEY": "F6322452",
+          "EVENT_DATE": "2026-06-12",
+          "LOGIN_COUNT": 25
+        },
+        {
+          "USER_KEY": "F6210703",
+          "EVENT_DATE": "2026-06-01",
+          "LOGIN_COUNT": 25
+        },
+        {
+          "USER_KEY": "F0739958",
+          "EVENT_DATE": "2026-06-29",
+          "LOGIN_COUNT": 25
+        },
+        {
+          "USER_KEY": "F0737998",
+          "EVENT_DATE": "2026-06-30",
+          "LOGIN_COUNT": 25
+        },
+        {
+          "USER_KEY": "F7205817",
+          "EVENT_DATE": "2026-06-17",
+          "LOGIN_COUNT": 24
+        },
+        {
+          "USER_KEY": "F6440621",
+          "EVENT_DATE": "2026-06-01",
+          "LOGIN_COUNT": 24
+        },
+        {
+          "USER_KEY": "F6750699",
+          "EVENT_DATE": "2026-06-11",
+          "LOGIN_COUNT": 24
+        },
+        {
+          "USER_KEY": "F2724978",
+          "EVENT_DATE": "2026-06-01",
+          "LOGIN_COUNT": 24
+        },
+        {
+          "USER_KEY": "F7092858",
+          "EVENT_DATE": "2026-06-02",
+          "LOGIN_COUNT": 23
+        },
+        {
+          "USER_KEY": "F4289001",
+          "EVENT_DATE": "2026-06-30",
+          "LOGIN_COUNT": 23
+        },
+        {
+          "USER_KEY": "F6365418",
+          "EVENT_DATE": "2026-06-11",
+          "LOGIN_COUNT": 23
+        },
+        {
+          "USER_KEY": "F2257501",
+          "EVENT_DATE": "2026-06-25",
+          "LOGIN_COUNT": 23
+        },
+        {
+          "USER_KEY": "F9170469",
+          "EVENT_DATE": "2026-06-08",
+          "LOGIN_COUNT": 22
+        },
+        {
+          "USER_KEY": "F9159211",
+          "EVENT_DATE": "2026-06-15",
+          "LOGIN_COUNT": 22
+        },
+        {
+          "USER_KEY": "F4682554",
+          "EVENT_DATE": "2026-06-12",
+          "LOGIN_COUNT": 22
+        },
+        {
+          "USER_KEY": "F1553419",
+          "EVENT_DATE": "2026-06-01",
+          "LOGIN_COUNT": 21
+        },
+        {
+          "USER_KEY": "F2788547",
+          "EVENT_DATE": "2026-06-17",
+          "LOGIN_COUNT": 21
+        },
+        {
+          "USER_KEY": "F1690233",
+          "EVENT_DATE": "2026-06-12",
+          "LOGIN_COUNT": 21
+        },
+        {
+          "USER_KEY": "F8030991",
+          "EVENT_DATE": "2026-06-23",
+          "LOGIN_COUNT": 21
+        },
+        {
+          "USER_KEY": "C1333663",
+          "EVENT_DATE": "2026-06-09",
+          "LOGIN_COUNT": 21
+        },
+        {
+          "USER_KEY": "F0737998",
+          "EVENT_DATE": "2026-06-26",
+          "LOGIN_COUNT": 20
+        },
+        {
+          "USER_KEY": "F4615579",
+          "EVENT_DATE": "2026-06-22",
+          "LOGIN_COUNT": 20
+        },
+        {
+          "USER_KEY": "F6817053",
+          "EVENT_DATE": "2026-06-24",
+          "LOGIN_COUNT": 20
+        },
+        {
+          "USER_KEY": "F6770283",
+          "EVENT_DATE": "2026-06-11",
+          "LOGIN_COUNT": 20
+        },
+        {
+          "USER_KEY": "F0737998",
+          "EVENT_DATE": "2026-06-11",
+          "LOGIN_COUNT": 20
+        },
+        {
+          "USER_KEY": "F4857521",
+          "EVENT_DATE": "2026-06-19",
+          "LOGIN_COUNT": 19
+        },
+        {
+          "USER_KEY": "F9329105",
+          "EVENT_DATE": "2026-06-12",
+          "LOGIN_COUNT": 19
+        },
+        {
+          "USER_KEY": "F9271243",
+          "EVENT_DATE": "2026-06-18",
+          "LOGIN_COUNT": 19
+        },
+        {
+          "USER_KEY": "F9170469",
+          "EVENT_DATE": "2026-06-10",
+          "LOGIN_COUNT": 19
+        },
+        {
+          "USER_KEY": "F6212353",
+          "EVENT_DATE": "2026-06-12",
+          "LOGIN_COUNT": 19
+        },
+        {
+          "USER_KEY": "F6750699",
+          "EVENT_DATE": "2026-06-12",
+          "LOGIN_COUNT": 19
+        },
+        {
+          "USER_KEY": "F8988459",
+          "EVENT_DATE": "2026-06-26",
+          "LOGIN_COUNT": 19
+        },
+        {
+          "USER_KEY": "F2548756",
+          "EVENT_DATE": "2026-06-23",
+          "LOGIN_COUNT": 19
+        },
+        {
+          "USER_KEY": "F2893819",
+          "EVENT_DATE": "2026-06-18",
+          "LOGIN_COUNT": 19
+        },
+        {
+          "USER_KEY": "F0655293",
+          "EVENT_DATE": "2026-06-26",
+          "LOGIN_COUNT": 19
+        },
+        {
+          "USER_KEY": "F7354558",
+          "EVENT_DATE": "2026-06-08",
+          "LOGIN_COUNT": 18
+        },
+        {
+          "USER_KEY": "F2726082",
+          "EVENT_DATE": "2026-06-22",
+          "LOGIN_COUNT": 18
+        },
+        {
+          "USER_KEY": "F6750699",
+          "EVENT_DATE": "2026-06-04",
+          "LOGIN_COUNT": 18
+        }
+      ],
+      "note": "Limite atual: 10 eventos por usuario/dia."
+    },
+    {
+      "name": "VPN ativa + login atual em rede fisica BB",
+      "status": "skipped",
+      "count": 0,
+      "sample": [],
+      "note": "Informe --physical-table para executar esta politica."
+    }
+  ]
+}

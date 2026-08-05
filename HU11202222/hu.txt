@@ -1,0 +1,108 @@
+📝 Descrição
+
+Como: analista de risco / prevenção a fraudes
+Quero: criar um backtest para simular e validar casos de VPN identificados nos modelos e regras atuais
+Para que: seja possível avaliar a efetividade dos critérios existentes, identificar falsos positivos/negativos e apoiar decisões de melhoria nos controles de segurança
+
+
+
+Tarefas:
+
+
+
+Detecção de anomalia das VPNs (Fora de horário padrão ARH + habitual; Mudanças de IP; dispositivo; quantidades por dia de logins; login durante as férias; Mais de dois IPs e Hostnames)
+
+ Conhecer implementação com o Theo do SGN
+
+ Verificar política de VPN como primeiro caso: “Existe sessão ativa para mesma chave com VPN + Login atual é em rede física do BB = encerra sessão de VPN no LDAP”
+
+
+
+Políticas:
+
+Existe sessão interna ativa para mesma chave com VPN + Sessão interna atual é em rede física do BB = encerra sessão de VPN no LDAP
+
+Existe login ativo para mesma chave em rede física + Login atual é em VPN = Não permite login atual (em análise)
+
+
+
+✅ Critérios de Aceite
+
+O backtest deve utilizar base histórica representativa, previamente validada pelo time
+
+Deve ser possível simular a aplicação das regras atuais de detecção de VPN sobre o histórico
+
+O resultado do backtest deve apresentar, no mínimo:Volume total de casos analisados
+
+Quantidade de casos classificados como VPN
+
+Taxa de falso positivo e falso negativo (quando aplicável)
+
+O processo de backtest deve ser reprodutível, com parâmetros documentados
+
+Os resultados devem ser disponibilizados de forma clara e compreensível para o time e stakeholders (ex.: tabela ou relatório simples)
+
+O backtest não deve impactar ambientes produtivos nem dados sensíveis em tempo real
+
+🧪 Cenários de Teste (BDD)
+
+📌 Cenário 1 – Execução do backtest com base histórica válida
+
+Dado que existe uma base histórica validada de acessos
+Quando o backtest de VPN for executado com as regras atuais
+Então o sistema deve retornar os resultados consolidados conforme os critérios definidos
+➡️ (Ref. Critérios: 1, 2 e 3)
+
+📌 Cenário 2 – Reprodutibilidade do backtest
+
+Dado que os parâmetros do backtest estão documentados
+Quando o backtest for executado novamente com os mesmos parâmetros
+Então os resultados devem ser equivalentes
+➡️ (Ref. Critério: 4)
+
+📌 Cenário 3 – Apresentação dos resultados
+
+Dado que o backtest foi executado com sucesso
+Quando os resultados forem disponibilizados
+Então devem estar claros, estruturados e compreensíveis para análise do time
+➡️ (Ref. Critério: 5)
+
+📊 Valor para o Negócio (Fibonacci)
+
+89
+
+Justificativa: impacto direto na qualidade dos controles de segurança, redução de riscos operacionais e apoio à tomada de decisão para evolução de regras/modelos.
+
+🔧 Subtarefas Essenciais
+
+Levantar e validar base histórica para o backtest
+
+Definir parâmetros e regras que serão aplicadas no backtest
+
+Implementar rotina de execução do backtest
+
+Consolidar e estruturar os resultados
+
+Documentar parâmetros, premissas e limitações
+
+⏱️ Avaliação de Sprint (15 dias)
+
+✅ É possível concluir esta história dentro de uma única sprint, desde que:
+
+A base histórica já esteja disponível ou seja de fácil acesso
+
+As regras de VPN já estejam definidas e maduras
+
+🔎 Caso contrário, recomenda-se quebrar a história em duas:
+
+SPIKE – Análise e definição de base histórica e métricas de avaliação
+
+Desenvolvimento – Implementação do backtest e consolidação dos resultados
+
+
+
+
+
+
+
+ 

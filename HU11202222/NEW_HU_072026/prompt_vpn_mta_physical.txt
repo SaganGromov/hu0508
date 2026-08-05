@@ -1,0 +1,357 @@
+================================================================================
+PROMPT — Detectar login simultâneo em VPN + rede física via DB2PEP.MTA_AUT_CLI_TRAN
+Repositório mono: /home/wsl/HU11202222/NEW_HU_072026
+Autor da HU: acr-controle-acesso-dashboard  (release: v2.0.25+)
+================================================================================
+
+OBJETIVO GERAL
+--------------
+Adicionar ao relatório de backtest de VPN (produzido por
+`backtest_vpn_local` e exibido em `acr-controle-acesso-dashboard`) uma nova
+detecção:
+
+    "Login em VPN + login em rede física ao mesmo tempo"
+
+A regra já existe como stub em
+`backtest_vpn_local/src/backtest_vpn/rules.py::run_active_vpn_plus_physical_login_case`,
+que hoje é reportada como `skipped` porque não há tabela física configurada.
+Devemos passar a executá-la de verdade correlacionando a tabela VPN
+`DB2PEP.AUT_CPTV` com a tabela de autenticação
+`DB2PEP.MTA_AUT_CLI_TRAN`, sem executar qualquer ação no LDAP — o backtest
+continua sendo simulação label-free.
+
+CONTEXTO JÁ CONFIRMADO SOBRE MTA_AUT_CLI_TRAN
+---------------------------------------------
+(Fonte: exploração feita em 2026-07-20; ver "resumo de descoberta" no final
+deste arquivo. Reconfirme com uma consulta rápida antes de codar.)
+
+* JDBC:    jdbc:db2://b2db2g5.plexbs2.bb.com.br:61250/B2DB2G5
+* Creds:   /home/wsl/HU11202222/gravar_dados_vpn/db2_credentials.json
+           (username=DB2PEP01) — reutilize os helpers de
+           `backtest_vpn.config` (`parse_jdbc_url`, `load_credentials`) e
+           `backtest_vpn.db2` (`connect`, `fetch_all`, `close`).
+* Catálogo: DB2 for z/OS. Use SYSIBM.SYSCOLUMNS / SYSTABLES / SYSINDEXES
+           (NÃO SYSCAT.*).
+* Limite:  ASUTIME ~= 9 segundos por statement (SQL0905N). Toda consulta
+           precisa ser estreita (filtro por PK, poucos LIKEs específicos,
+           `FETCH FIRST N ROWS ONLY`).
+* Restrição SQL: `SUBSTR(varchar_col, 1, N)` falha nesta instância; use
+           `LEFT(col, N)` ou `CAST(col AS VARCHAR(N))`.
+* Estrutura (12 colunas):
+    - CD_IDFR_MTA   DECIMAL(11,0) NOT NULL — PK (índice único IPEP003A;
+                    é o único índice; monotonicamente crescente).
+    - CD_UNCO_TRAN  CHAR(36)  — UUID que agrupa TODOS os steps de um mesmo
+                    fluxo de autenticação (pode aparecer 'null' quando não
+                    houver flow associado).
+    - NM_ETP        CHAR(70)  — nome do node (ex.: BBUsernameCollectorNode,
+                    BBPasswordCollectorNode, BBPasswordDecisionNode,
+                    BBTOTPCollectorNode, BBOfdCollectorNode/StartNode/
+                    DecisionNode/Gateway, BBFingerprintNode/
+                    PolicyDecisionNode, BBShowUserAttributesNode,
+                    BBTOTPPolicyDecisionNode/DecisionNode,
+                    BBPasswordFakeCollectorNode). Padding com espaços — use
+                    TRIM/strip.
+    - NM_EXDT_TRAN  CHAR(50)  — realm/path (ex.: '/bb').
+    - CD_CLI_TRAN   INTEGER   — id do cliente.
+    - TS_TRAN       TIMESTAMP(6) — NÃO indexada; range scan por tempo é
+                    caro. Use a PK como bracketing primário.
+    - NR_TRAN_PTC   SMALLINT.
+    - IN_SCS_EXEA_ETP CHAR(1) — 's'/'n' (sucesso do step).
+    - TX_MSG_ERRO_TRAN CHAR(255) — texto de erro (nullable).
+    - NM_SVDR_PRCT  CHAR(50)  — provedor (ex.: 'openam'). Padding.
+    - JS_INF_CLI    VARCHAR(10000) — JSON string com o que interessa:
+                        "username":"F4476913"      (matches AUT_CPTV.CD_USU_AUT)
+                        "ipCliente":"10.64.100.176" (IP do cliente HTTP)
+                    Em amostra recente 100% das linhas continham AMBOS.
+    - JS_PRCT_ETP   VARCHAR(10000) — JSON com referer/hostName/cookies etc.
+* Cardinalidade: ~9,7 x 10^7 linhas em 2026-07-11. Tabela é populada em
+  tempo real (última TS_TRAN observada = agora ± segundos).
+* Não use JSON_VALUE às cegas — primeiro TESTE se está disponível
+  (`SELECT JSON_VALUE(JS_INF_CLI, '$.ipCliente') FROM ... FETCH FIRST 1 ROW ONLY`).
+  Se falhar, faça o parse client-side em Python com `json.loads` (o campo é
+  um array JSON com 2–3 objetos; `ipCliente` está no objeto do índice 1).
+
+VPN TABLE (JÁ USADA)
+--------------------
+DB2PEP.AUT_CPTV, colunas em `.env.example`:
+  CD_USU_AUT           = usuário (ex.: F4476913)
+  TS_TRAN              = timestamp do evento VPN
+  CD_END_LGC_OGM       = IP de origem (antes do túnel)
+  CD_END_LGC_CPTV      = IP corporativo atribuído pela VPN
+  NM_DSVO              = hostname
+  CD_IDFC_DSVO         = device id
+
+DEFINIÇÃO DA DETECÇÃO (implementar exatamente assim)
+----------------------------------------------------
+Para cada evento VPN v em DB2PEP.AUT_CPTV com TS_TRAN em [cfg.start, cfg.end):
+
+  Considere v "com login físico simultâneo" quando existir, para o mesmo
+  `CD_USU_AUT`, pelo menos UM step em MTA_AUT_CLI_TRAN tal que:
+
+    (a) MTA.TS_TRAN ∈ [v.TS_TRAN − Δ,  v.TS_TRAN + Δ]
+        onde Δ = cfg.active_window_hours (mesmo parâmetro já existente).
+    (b) o `username` extraído de JS_INF_CLI é EXATAMENTE v.CD_USU_AUT
+        (uppercase, trim).
+    (c) o `ipCliente` extraído de JS_INF_CLI é DIFERENTE de v.CD_END_LGC_CPTV
+        (i.e. o login autenticado não veio pelo IP tunelado pela VPN — sinal
+        de que há uma sessão adicional em rede física paralela).
+    (d) opcionalmente (configurável), o `ipCliente` cai em uma das faixas
+        privadas corporativas (10/8, 172.16/12, 192.168/16) — controlável via
+        variável `PHYSICAL_IP_CIDRS` (lista separada por vírgula). Default:
+        "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16".
+    (e) o step deve ser um "login efetivo": `IN_SCS_EXEA_ETP = 's'` e
+        `NM_ETP` ∈ {BBShowUserAttributesNode, BBPasswordDecisionNode,
+        BBTOTPDecisionNode, BBOfdDecisionNode}. (Estes marcam decisões
+        bem-sucedidas, evitando contar todos os steps do mesmo fluxo.)
+        Deduplique por `CD_UNCO_TRAN` (`SELECT DISTINCT` ou GROUP BY) para
+        cada match — cada fluxo conta uma vez.
+
+ARQUITETURA DA IMPLEMENTAÇÃO
+----------------------------
+
+1) Novo módulo `backtest_vpn_local/src/backtest_vpn/mta.py`:
+   * `MtaConfig` (dataclass frozen) com:
+       schema='DB2PEP', table='MTA_AUT_CLI_TRAN',
+       decision_nodes=tuple(...), success_flag='s',
+       ip_cidrs=[...ipaddress.ip_network...]
+   * `load_mta_config_from_env()` — respeitando MTA_SCHEMA, MTA_TABLE,
+     MTA_DECISION_NODES (CSV), PHYSICAL_IP_CIDRS (CSV). Todos opcionais com
+     os defaults acima.
+   * `estimate_pk_window(conn, ts_lo, ts_hi)` — dado um intervalo de tempo,
+     retorna (id_lo, id_hi) aproximado usando 2 âncoras via busca binária
+     por PK. Faça um teste único de calibração cacheado por conexão para
+     estimar linhas/segundo (~10/s no ambiente atual, mas NÃO hardcode:
+     amostre 3 pontos por binary search). Adicione margem de segurança de
+     20% em cada lado. Mantenha `id_hi - id_lo <= 2_000_000` por chamada
+     (senão o BETWEEN vira scan e estoura ASUTIME).
+   * `find_matches_for_vpn_event(conn, mta_cfg, user, vpn_ip, ts_lo, ts_hi,
+        limit=50)`:
+        Monta e executa SQL parametrizado do tipo:
+
+          SELECT CD_UNCO_TRAN, NM_ETP, TS_TRAN,
+                 CAST(JS_INF_CLI AS VARCHAR(1500)) AS INF
+            FROM DB2PEP.MTA_AUT_CLI_TRAN
+           WHERE CD_IDFR_MTA BETWEEN ? AND ?
+             AND TS_TRAN     BETWEEN ? AND ?
+             AND IN_SCS_EXEA_ETP = 's'
+             AND NM_ETP IN (?, ?, ?, ?)          -- placeholders p/ cada nó
+             AND JS_INF_CLI LIKE ?               -- '%"username":"<USR>"%'
+           FETCH FIRST ? ROWS ONLY
+
+        Depois em Python:
+          - parse JSON de INF, extrai ipCliente
+          - filtra `ipCliente != vpn_ip` (case a) e presença em ip_cidrs
+          - deduplica por CD_UNCO_TRAN (mantém earliest TS_TRAN)
+        Retorna lista de tuplas
+        (cd_unco_tran, mta_ts, ip_cliente, nm_etp_trim).
+
+2) Estender `config.py` (sem quebrar API existente):
+   * Adicionar campo opcional `mta_table: Optional[MtaConfig]` em
+     `BacktestConfig` (default `None`).
+   * `cli.py` deve preencher `mta_table` sempre que o env de credenciais/
+     JDBC estiver presente (i.e. por padrão ATIVO), com opção
+     `--no-mta-physical` para desligar.
+
+3) Nova regra em `rules.py`:
+   * Adicionar `run_vpn_plus_mta_physical_case(conn, cfg)` — devolve
+     `BacktestCaseResult(name="vpn_ativa_com_login_em_rede_fisica_mta", ...)`.
+   * NÃO remova a regra antiga `run_active_vpn_plus_physical_login_case`;
+     mantém como está (skipped por default).
+   * Registrar a nova regra em `run_backtest_cases(...)`.
+   * A regra deve:
+       - Carregar todos os eventos VPN da janela [cfg.start, cfg.end)
+         (SELECT já existente na regra antiga é bom guia — apenas
+         projetando CD_USU_AUT, TS_TRAN, CD_END_LGC_CPTV).
+       - Agrupar por (CD_USU_AUT) para minimizar chamadas repetidas ao MTA:
+         para cada usuário, calcule a menor faixa temporal cobrindo seus
+         eventos VPN, faça UMA query no MTA por batch de até
+         `cfg.distinct_limit` usuários (ou 1 por usuário se o batch estourar
+         ASUTIME). Reutilize `estimate_pk_window`.
+       - Contabilizar matches (regra a–e), respeitando
+         `cfg.sample_limit` para a amostra e `cfg.distinct_limit` para
+         limitar quantos usuários amostrar em corridas exploratórias.
+       - Registrar contadores em BacktestCaseResult.count e sample
+         (username pseudonimizado se `pseudonym` já estiver em uso — siga
+         o padrão de outras regras).
+
+4) Report / HTML:
+   * `report.py`, `htmlreport.py`, `bundle.py`: adicione a nova regra à
+     lista de casos exibidos, com título em pt-BR:
+       "VPN ativa + login em rede física (via MTA_AUT_CLI_TRAN)"
+     e nota explicando janela ±Δ h, exclusão do IP tunelado, dedup por
+     CD_UNCO_TRAN, faixas privadas consideradas. Copie/adapte a estilística
+     usada nas outras regras.
+   * NÃO adicione campos sensíveis ao HTML (nada de JSON cru; apenas IP
+     mascarado tipo 10.x.x.NNN e username pseudonimizado como as demais
+     regras).
+
+5) Dashboard (`acr-controle-acesso-dashboard`):
+   * `streamlit_app/pages/logins_suspeitos.py` (e/ou nova página se
+     apropriado): adicionar seção "Login simultâneo VPN + rede física",
+     lendo o bundle JSON mais recente em
+     `acr_controle_acesso_dashboard/static/backtest_vpn/` (arquivo
+     `results_bundle_*.json`). Não faça nova consulta ao DB2 pelo
+     Streamlit — o dashboard só CONSOME o bundle gerado pelo backtest.
+   * Se houver template HTML novo, siga a Diretriz de Idioma abaixo.
+
+6) Regenerar artefatos de exemplo:
+   * Após implementar, rode `backtest_vpn_local/run_backtest.sh` com uma
+     janela curta (últimas 24h ou últimas 2h) para gerar um novo
+     `results_bundle_<ts>.json` + `.htm` + `.fragment.htm` em
+     `backtest_vpn_local/reports/` e COPIE para
+     `acr-controle-acesso-dashboard/acr_controle_acesso_dashboard/static/backtest_vpn/`
+     atualizando os symlinks/aliases `latest.htm`, `latest.fragment.htm`,
+     `results_bundle_<ts>.json`. Se o job de backtest não puder rodar
+     nesta máquina, gere um bundle com dados sintéticos anonimizados
+     apenas suficiente para o dashboard renderizar sem quebrar.
+
+DIRETRIZ DE IDIOMA (OBRIGATÓRIA)
+--------------------------------
+Ao TOCAR em qualquer arquivo HTML (`*.htm`, `*.html`) — inclusive templates
+Jinja em `acr-controle-acesso-dashboard/acr_controle_acesso_dashboard/templates/`
+e páginas geradas em `.../static/backtest_vpn/`:
+
+* Corrija gramática, ortografia e ACENTUAÇÃO do português do Brasil em
+  TODO o texto visível ao usuário. Exemplos comuns a corrigir quando
+  presentes: "usuario" → "usuário", "codigo" → "código",
+  "transacao" → "transação", "politica" → "política", "sicronização" →
+  "sincronização", "Invlida" → "Inválida", "emisso" → "emissão", "  " →
+  " ", pontuação faltante, capitalização de frase e concordância verbal.
+* NÃO altere identificadores, chaves JSON, valores em atributos técnicos
+  (ex. IDs CSS, `data-*`, valores de `hx-*`, nomes de arquivos, códigos
+  UUID, mensagens vindas de logs reais preservadas para fidelidade). A
+  correção é apenas do texto humano-legível (parágrafos, cabeçalhos,
+  labels de UI, títulos de card, tooltips, mensagens de erro/aviso).
+* Se um texto vem de campo do banco (ex.: `TX_MSG_ERRO_TRAN` cru),
+  NÃO reescreva o valor — apenas garanta que os textos EM VOLTA (título
+  da coluna, legendas) estejam corretos.
+* Se tocar um HTML apenas para corrigir texto, ainda assim inclua no
+  commit dedicado a essas correções (ver "Convenção de commits").
+
+CREDENCIAIS / SEGURANÇA
+-----------------------
+* NUNCA logue senha ou dsn contendo `PWD=`.
+* NUNCA commite `db2_credentials.json` nem seu conteúdo em nenhum repo.
+* Todo teste manual roda com o arquivo de credenciais em
+  /home/wsl/HU11202222/gravar_dados_vpn/db2_credentials.json. Se o script
+  precisar dele, aceite o path via env `DB2_CREDENTIALS_FILE` já usado
+  pelo projeto.
+
+TESTES
+------
+* Adicione testes em `backtest_vpn_local/tests/` para:
+    - parsing de JSON de `JS_INF_CLI` (extração username/ipCliente,
+      inclusive rows com "null" em CD_UNCO_TRAN e com ipCliente ausente).
+    - filtro por CIDR (10/8, 172.16/12, 192.168/16).
+    - dedup por CD_UNCO_TRAN.
+    - a regra `run_vpn_plus_mta_physical_case` com um `conn` fake que
+      devolve linhas mockadas (mesmo padrão usado nos testes já existentes,
+      se houver; caso contrário, use `unittest.mock`).
+* Rode os testes já existentes + novos:
+      cd backtest_vpn_local && .venv/bin/python -m pytest -q
+* NÃO adicione novo framework de teste; use o que o projeto já usa.
+
+VALIDAÇÃO END-TO-END
+--------------------
+1. `cd backtest_vpn_local && .venv/bin/python -m pytest -q` — tudo verde.
+2. Rodar o backtest apontando para as últimas 2 horas (janela pequena para
+   respeitar ASUTIME):
+      export DB2_CREDENTIALS_FILE=/home/wsl/HU11202222/gravar_dados_vpn/db2_credentials.json
+      .venv/bin/python -m backtest_vpn --start "$(date -d '2 hours ago' +'%Y-%m-%d %H:%M:%S')" \
+                                       --end   "$(date +'%Y-%m-%d %H:%M:%S')"
+   O relatório novo deve aparecer no HTML gerado sem stacktrace e o caso
+   "vpn_ativa_com_login_em_rede_fisica_mta" deve ter status "ok".
+3. Abrir o HTML gerado (por inspeção do arquivo) e confirmar português
+   corrigido e a nova seção presente.
+4. `streamlit run acr-controle-acesso-dashboard/app.py` NÃO é obrigatório;
+   basta garantir que a página `logins_suspeitos.py` importa sem erro
+   (`python -c "import acr_controle_acesso_dashboard.streamlit_app.pages.logins_suspeitos"`).
+
+CONVENÇÃO DE COMMITS (siga estritamente)
+----------------------------------------
+Commits pequenos, atômicos, mensagem no padrão Conventional Commits em
+pt-BR, uma linha resumo + corpo curto:
+
+  feat(backtest): módulo mta.py para consultar MTA_AUT_CLI_TRAN
+  feat(rules): regra vpn_ativa_com_login_em_rede_fisica_mta
+  feat(report): expor nova regra no HTML e bundle JSON
+  feat(dashboard): seção "VPN + rede física" em logins_suspeitos
+  chore(html): correção de acentuação/gramática em pt-BR
+  test(mta): parsing de JSON, CIDR, dedup e regra fake-conn
+  chore(release): v2.0.26 backtest VPN + rede física via MTA
+
+Ao final, incrementar patch/minor conforme o SEMVER do repo em questão:
+* `acr-controle-acesso-dashboard`: bump minor (nova feature no dashboard)
+  atualizando CHANGELOG.md.
+* `backtest_vpn_local` (que fica dentro do repo NEW_HU_072026): não tem
+  versionamento próprio; commit direto.
+* `deploy-acr-controle-acesso-dashboard`: se `values.yaml` ou `Chart.yaml`
+  precisarem apontar para a nova imagem/tag, faça bump lá também. Se não
+  precisar, não abra commit vazio.
+
+REPOSITÓRIOS-ALVO E PUSH
+------------------------
+Todos os repositórios abaixo estão como subdiretórios (submódulos "à mão")
+de `/home/wsl/HU11202222/NEW_HU_072026`. Cada um tem seu próprio `.git`:
+
+  1) acr-controle-acesso-dashboard/
+        remote: https://github.com/bbvinet/acr-controle-acesso-dashboard.git
+        branch base: main
+  2) deploy-acr-controle-acesso-dashboard/
+        remote: https://github.com/bbvinet/deploy-acr-controle-acesso-dashboard.git
+        branch base: (verificar; default main)
+  3) NEW_HU_072026/ (o repo mono deste diretório, contém backtest_vpn_local)
+        remote: https://github.com/SaganGromov/NEW_HU_072026.git
+        branch base: (verificar HEAD atual)
+
+Fluxo obrigatório para CADA repo tocado:
+  a. `git -C <repo> status` — confirmar limpo antes de começar.
+  b. Fazer as alterações e commits atômicos com a convenção acima.
+  c. `git -C <repo> pull --rebase origin <branch>` — evitar conflito.
+  d. `git -C <repo> push origin HEAD:<branch>`.
+  e. Se o push falhar por proteção de branch/PR obrigatório, criar branch
+     `feat/vpn-mta-physical-simult` e abrir PR via `gh pr create` com
+     título "feat: detecção de VPN + login em rede física via
+     MTA_AUT_CLI_TRAN" e descrição resumindo esta HU.
+
+CO-AUTHOR TRAILER (obrigatório em TODOS os commits):
+  Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+CHECKLIST FINAL (marque tudo antes de terminar)
+-----------------------------------------------
+[ ] Consulta rápida de reconfirmação em MTA_AUT_CLI_TRAN executada (max id,
+    últimos NM_ETP, contagem simples). Log salvo em
+    /tmp/mta_recheck_<ts>.log (não commitar).
+[ ] Módulo `backtest_vpn.mta` criado com dataclass, helpers e docstrings.
+[ ] `config.py`/`cli.py` estendidos, defaults ligados, flag para desligar.
+[ ] Nova regra registrada em `run_backtest_cases`.
+[ ] Report/HTML/bundle contemplam a nova regra.
+[ ] Página do dashboard consome o bundle e renderiza a seção nova.
+[ ] Testes novos e antigos verdes (`pytest -q`).
+[ ] Rodada real de 2h executada com sucesso; bundle atualizado copiado
+    para `static/backtest_vpn/`.
+[ ] Todo HTML tocado com português correto (acentos, gramática, pontuação).
+[ ] CHANGELOG.md de `acr-controle-acesso-dashboard` atualizado.
+[ ] Commits atômicos com co-author, e push feito em cada repo aplicável.
+[ ] PR aberto quando push direto na branch de proteção não for possível.
+
+--------------------------------------------------------------------------------
+APÊNDICE — Resumo de descoberta (para consulta rápida, não colar em code)
+--------------------------------------------------------------------------------
+* 97.062.537 linhas (stats 2026-07-11). MAX(CD_IDFR_MTA)=144_021_293 em
+  2026-07-20 15:31; 15:32:50 → tabela viva.
+* Único índice: PK IPEP003A(CD_IDFR_MTA). TS_TRAN não indexado.
+* Distribuição NM_ETP (últimos ~20k): 14 tipos, principais
+  BBPasswordCollectorNode / BBPasswordDecisionNode /
+  BBUsernameCollectorNode / BBTOTPCollectorNode /
+  BBFingerprintPolicyDecisionNode etc. Todos com 100% de rows contendo
+  `"ipCliente"` e `"username"` em JS_INF_CLI.
+* IPs vistos: 10.64.100.176, 10.57.68.81, 10.134.160.162, 10.31.13.156,
+  172.29.212.150, 192.168.168.123 etc. — mix de faixas privadas.
+* Formato de username em JSON casa 1:1 com CD_USU_AUT do AUT_CPTV
+  (ex.: F4476913, C1310324, E1258439).
+* SQL0905N (ASUTIME=9s) aparece ao usar subconsulta
+  `MAX(CD_IDFR_MTA)` dentro de WHERE; SEMPRE compute o MAX antes e injete
+  como literal seguro (é um DECIMAL, então basta int()).
+
+FIM.

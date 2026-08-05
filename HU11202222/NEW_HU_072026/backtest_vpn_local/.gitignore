@@ -1,0 +1,8 @@
+.pseudonym_key
+reverse_map_*.json
+extracts/
+adjudication/
+reports/
+__pycache__/
+*.egg-info/
+.venv/

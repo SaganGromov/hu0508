@@ -1,0 +1,2 @@
+[console_scripts]
+backtest-vpn = backtest_vpn.cli:main

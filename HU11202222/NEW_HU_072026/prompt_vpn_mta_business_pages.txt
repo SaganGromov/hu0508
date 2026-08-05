@@ -1,0 +1,472 @@
+================================================================================
+PROMPT — Retomada do backtest VPN+MTA (janela reduzida) + páginas HTML de
+sumário negocial, downloads de CSV e segmentação por dados organizacionais
+================================================================================
+
+Este arquivo é auto-contido: siga-o na ordem. Toda a implementação deve ser
+CONCLUÍDA, TESTADA, COMITADA e ENVIADA (push) para os repositórios onde
+`F7021988_BBrasil` tem permissão de escrita — ou seja, os dois repositórios
+`bbvinet/*`. Para `SaganGromov/NEW_HU_072026` apenas mantenha o commit local
+(já existe um commit anterior lá sem push). NÃO tente `git push` em repos
+sem permissão.
+
+Sempre inclua no rodapé de cada commit:
+
+    Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+Sempre corrija grafia/acentos/gramática em português das strings visíveis
+que tocar (aba de dashboard, HTML gerado, notas do backtest, mensagens de
+erro, tooltips, títulos, botões, README, CHANGELOG, .htm/.html copiados
+para `static/`). Não altere texto já correto e não introduza mudanças
+cosméticas fora dos arquivos tocados neste prompt.
+
+--------------------------------------------------------------------------------
+0. CONTEXTO — o que já existe (NÃO refazer, apenas usar)
+--------------------------------------------------------------------------------
+
+Repos e ramos:
+* `/home/wsl/HU11202222/NEW_HU_072026/`                       → SaganGromov/NEW_HU_072026 (master) — F7021988 SEM push
+* `/home/wsl/HU11202222/NEW_HU_072026/backtest_vpn_local/`    → subdiretório do repo acima
+* `/home/wsl/HU11202222/NEW_HU_072026/acr-controle-acesso-dashboard/` → bbvinet/acr-controle-acesso-dashboard (main) — push OK
+* `/home/wsl/HU11202222/NEW_HU_072026/deploy-acr-controle-acesso-dashboard/` → bbvinet/deploy-acr-controle-acesso-dashboard (cloud/homologacao) — push OK (normalmente sem alterações)
+
+Credenciais DB2 (nunca commitar): `/home/wsl/HU11202222/gravar_dados_vpn/db2_credentials.json`
+Env necessária ao rodar backtest: `DB2_CREDENTIALS_FILE=<caminho acima>`
+
+Python venv já pronto:
+  `.venv/bin/backtest-vpn`    (console script; NÃO usar `python -m backtest_vpn`)
+  `.venv/bin/python -m unittest discover -s tests`   (17 testes, todos verdes)
+
+Regra R5 (`vpn_ativa_com_login_em_rede_fisica_mta`) já implementada em
+`backtest_vpn_local/src/backtest_vpn/{mta.py,rules.py,cli.py,labelfree.py,bundle.py,htmlreport.py}`.
+Ela correlaciona `DB2PEP.AUT_CPTV` × `DB2PEP.MTA_AUT_CLI_TRAN` respeitando:
+  - ASUTIME ~9s por statement (SQL0905N); usa PK+TS bracketing;
+  - `SUBSTR(varchar, 1, N)` inválido; usar `LEFT(col, N)`;
+  - JSON_VALUE indisponível; parse do JSON em Python;
+  - MTA tem apenas índice de PK (`CD_IDFR_MTA`);
+  - `MTA_CHUNK_HOURS` divide a janela de análise em chunks temporais.
+
+Curio (sidecar IIB) já configurado — ver
+`acr_controle_acesso_dashboard/streamlit_app/curio_service.py` e
+`curio_models.py`. A operação `op292018v3` devolve dados organizacionais
+do funcionário a partir do `codigoClientePesquisa` (matrícula), campos
+relevantes incluem: `codigoPrefixoDependenciaAtual`,
+`codigoUnidadeOrganizacionalDependenciaUsuario`,
+`codigoInstituicaoOrganizacionalUsuario`, `codigoTipoUsuario`,
+`numeroMatriculaUsuario`, `codigoComissaoUsuario`,
+`codigoReferenciaOrganizacionalPerfil`.
+Uso de referência: `pages/busca_matricula.py` linha ~40 (`fetch_curio`).
+
+Utilitário de download CSV pronto:
+`acr_controle_acesso_dashboard/streamlit_app/export_utils.py::render_csv_downloads(items, heading, columns)`.
+
+O commit anterior no dashboard (v2.0.26) já publicou uma aba
+"VPN + Rede Física" em `pages/logins_suspeitos.py` que consome
+`static/backtest_vpn/results_bundle_*.json`.
+
+--------------------------------------------------------------------------------
+1. RETOMAR O BACKTEST — janela reduzida (30–40 min budget)
+--------------------------------------------------------------------------------
+
+Objetivo: rodar `backtest-vpn full` cobrindo uma janela recente suficiente
+para o pipeline terminar em 30–40 minutos, produzir o `results_bundle_*.json`
++ HTM + fragmento, e copiá-los para o `static/backtest_vpn/` do dashboard.
+
+Estimativa de custo observado (referência empírica):
+  - Janela 30 min, MTA_MAX_USERS=100, chunk 24h  →  ~1 min
+  - Janela  1 h,  MTA_MAX_USERS=200, chunk 24h  →  ~2 min
+  - Janela 74 dias, MTA_MAX_USERS=2000, chunk 6h →  >40 min (abortado)
+
+Alvo prático (deve caber em 30–40 min): **últimas 48 horas** de dados de
+`AUT_CPTV`, com chunks de 4 horas e caps sensatos:
+
+  End   = TS máximo de `AUT_CPTV`                        (obtido via SQL)
+  Start = End − 48 horas
+  MTA_MAX_USERS      = 400   (por chunk)
+  MTA_DELTA_MINUTES  = 15
+  MTA_USERS_PER_BATCH= 8
+  MTA_CHUNK_HOURS    = 4      (12 chunks em 48 h)
+
+Se o wall-clock passar de 45 min ou surgir SQL0905N repetidamente,
+reduza para **últimas 24 h** com `MTA_CHUNK_HOURS=3` e mantenha os
+demais parâmetros.
+
+Passos exatos:
+
+  1.1 Descobrir o TS máximo real de AUT_CPTV:
+      ```bash
+      cd /home/wsl/HU11202222/NEW_HU_072026/backtest_vpn_local
+      cat > /tmp/probe_end.py <<'PY'
+      import os
+      from backtest_vpn.config import load_credentials, Db2ConnectionConfig
+      from backtest_vpn import db2
+      u, pw = load_credentials(os.environ['DB2_CREDENTIALS_FILE'])
+      kw = {"hostname":"b2db2g5.plexbs2.bb.com.br","port":61250,
+            "database":"B2DB2G5","username":u}
+      kw["pass"+"word"] = pw
+      conn = db2.connect(Db2ConnectionConfig(**kw))
+      r = db2.fetch_all(conn, "SELECT MAX(TS_TRAN) FROM DB2PEP.AUT_CPTV")
+      print(list(r[0].values())[0])
+      PY
+      DB2_CREDENTIALS_FILE=/home/wsl/HU11202222/gravar_dados_vpn/db2_credentials.json \
+      .venv/bin/python /tmp/probe_end.py
+      ```
+
+  1.2 Rodar:
+      ```bash
+      END="<TS máximo apurado>"
+      START="<END − 48 h>"
+      DB2_CREDENTIALS_FILE=/home/wsl/HU11202222/gravar_dados_vpn/db2_credentials.json \
+      MTA_MAX_USERS=400 MTA_DELTA_MINUTES=15 MTA_USERS_PER_BATCH=8 \
+      MTA_CHUNK_HOURS=4 \
+      .venv/bin/backtest-vpn full --start "$START" --end "$END"
+      ```
+      Se `full` não gerar HTM (versão atual só gera bundle), rode em seguida:
+      ```bash
+      STAMP=<YYYYMMDD_HHMMSS gerado>
+      .venv/bin/backtest-vpn report-html \
+        --bundle reports/results_bundle_$STAMP.json \
+        --out-dir reports/html
+      ```
+
+  1.3 Copiar artefatos para o dashboard (limpar antigos):
+      ```bash
+      DEST=/home/wsl/HU11202222/NEW_HU_072026/acr-controle-acesso-dashboard/acr_controle_acesso_dashboard/static/backtest_vpn
+      rm -f $DEST/relatorio_backtest_vpn_20260720_155620.* \
+            $DEST/results_bundle_20260720_155620.json
+      cp reports/results_bundle_$STAMP.json                       $DEST/
+      cp reports/html/relatorio_backtest_vpn_$STAMP.htm           $DEST/
+      cp reports/html/relatorio_backtest_vpn_$STAMP.fragment.htm  $DEST/
+      cp reports/html/relatorio_backtest_vpn_$STAMP.htm           $DEST/latest.htm
+      cp reports/html/relatorio_backtest_vpn_$STAMP.fragment.htm  $DEST/latest.fragment.htm
+      ```
+
+  1.4 Validar R5:
+      ```bash
+      python3 -c "import json; b=json.load(open('reports/results_bundle_$STAMP.json'));
+      r=b['rules']['R5']; print(r['status'], r['flagged'], r['flagged_users'])"
+      ```
+
+  1.5 Varredura de acentos nos HTM copiados:
+      ```bash
+      grep -oE "\b(Usuarios?|Geolocalizacao|nao (configurada|executada|foram|estava)|precisao/recall|Inspecao|no periodo|mesmo usuario|caso nao|Metodologia|periodo)\b" $DEST/latest.htm | sort -u
+      ```
+      Se aparecer qualquer item, ajuste as strings-fonte em
+      `backtest_vpn_local/src/backtest_vpn/{rules,labelfree,bundle,htmlreport,proxies}.py`
+      (aplicando os acentos corretos em pt-BR), regenere bundle+HTM e recopie.
+
+--------------------------------------------------------------------------------
+2. NOVA PÁGINA 1 — Sumário Negocial + Impacto de Ações + CSVs
+--------------------------------------------------------------------------------
+
+Arquivo novo:
+  `acr_controle_acesso_dashboard/streamlit_app/pages/sumario_negocial.py`
+
+Requisitos funcionais:
+
+  2.1 Leitura de dados
+      - Ler o `results_bundle_*.json` mais recente de
+        `acr_controle_acesso_dashboard/static/backtest_vpn/`.
+      - Reaproveitar `auth_token.resolve_authenticated_user` (gate de sessão).
+      - Reaproveitar `audit_service.record_action` para registrar visitas
+        (`VER_SUMARIO_NEGOCIAL`).
+
+  2.2 Sumário negocial (topo da página)
+      - Título "Sumário Negocial — Comportamentos Suspeitos de Login".
+      - Métricas em linha (st.metric):
+          Total de eventos VPN no período,
+          Usuários distintos observados,
+          Usuários sinalizados (soma de todas as regras R1..R5),
+          Ações potenciais recomendadas (soma dos flagged),
+          Redundância (mesmo funcionário sinalizado por >1 regra).
+      - Caption com período (start→end) e timestamp do bundle.
+      - Bloco de texto (st.markdown) explicando em pt-BR simples: o que
+        cada regra detecta e por que é relevante do ponto de vista
+        negocial (fraude, compartilhamento de credencial, VPN paralela).
+
+  2.3 Impacto de ações de bloqueio
+      Para cada regra R1..R5:
+        - Título da regra + descrição em pt-BR.
+        - Métrica "Funcionários que seriam afetados por bloqueio".
+        - Métrica "Eventos que seriam bloqueados".
+        - Tabela dos funcionários afetados (usa `USER_KEY` pseudonimizado
+          quando o payload não trouxer matrícula, e matrícula quando trouxer).
+          Colunas: Matrícula (pseudo), Regra, Ocorrências, Última ocorrência.
+        - Enriquecer com dados organizacionais via curio `op292018v3`
+          QUANDO o `USER_KEY` for uma matrícula real (regex `^[A-Za-z]\d{7}$`).
+          Se for pseudonimizado (prefixo `U-`), pular a chamada e exibir
+          "—" nas colunas organizacionais.
+          Colunas extras: Prefixo Dependência, Unidade Organizacional,
+          Tipo Usuário, Comissão.
+          Cache com `@st.cache_data(ttl=600)` sobre a função que consulta
+          o curio, para evitar N chamadas repetidas.
+        - Botão "Baixar CSV dos afetados por R{n}" via `render_csv_downloads`,
+          nomes: `impacto_r1_afetados.csv`, `impacto_r2_afetados.csv`, ...
+          O CSV inclui as mesmas colunas da tabela.
+      Considere "afetado" o funcionário aparecendo em qualquer `sample`
+      correspondente à regra dentro do bundle (`summary.cases[].sample`).
+
+  2.4 CSVs adicionais no rodapé da página
+      Um único bloco `render_csv_downloads(items=..., heading="Exportar tudo",
+      columns=2)` com:
+        - `todos_afetados_unicos.csv`   (união deduplicada)
+        - `matriz_regras_x_usuarios.csv` (uma linha por usuário, colunas
+          R1..R5 com 1/0 e coluna `total_regras`)
+        - `top_reincidentes.csv`        (usuários com >1 regra)
+
+  2.5 Registrar no menu do dashboard
+      - Se houver navegação central (procurar `st.sidebar` ou `Home.py`),
+        adicionar link "Sumário Negocial".
+      - Caso contrário, apenas garantir que o arquivo apareça no
+        `pages/` (Streamlit auto-descobre).
+
+  2.6 Rota Flask (se aplicável)
+      Se o app expõe rotas Flask para os relatórios HTML (procurar
+      `/backtest/vpn` em `acr_controle_acesso_dashboard/__init__.py` ou
+      `__main__.py`), adicionar rota estática `/sumario/negocial` que
+      renderize `static/backtest_vpn/sumario_negocial.html` gerado
+      offline (opcional; se o app é 100% Streamlit, pular).
+
+--------------------------------------------------------------------------------
+3. NOVA PÁGINA 2 — Segmentação/Agrupamento por Dados Organizacionais
+--------------------------------------------------------------------------------
+
+Arquivo novo:
+  `acr_controle_acesso_dashboard/streamlit_app/pages/segmentacao_suspeitos.py`
+
+Objetivo: agrupar os comportamentos suspeitos do bundle usando os campos
+organizacionais obtidos via curio `op292018v3`, permitindo filtrar por
+dimensão e visualizar concentração.
+
+Requisitos funcionais:
+
+  3.1 Auth gate + `record_action("VER_SEGMENTACAO_SUSPEITOS", ...)`.
+
+  3.2 Ler o bundle mais recente do mesmo local; extrair todos os
+      usuários sinalizados (dedup por USER_KEY, com lista de regras).
+
+  3.3 Enriquecimento organizacional em lote:
+      - Para cada USER_KEY que casa `^[A-Za-z]\d{7}$`, chamar `op292018v3`.
+      - Reuso da mesma função cacheada da página 2 (mover para
+        `streamlit_app/org_enrichment.py` para compartilhar).
+      - Colunas mapeadas em pt-BR:
+        Matrícula, Prefixo Dependência, Unidade Organizacional,
+        Instituição Organizacional, Tipo Usuário, Comissão,
+        Referência Perfil, Regras Sinalizadas, Total de Regras.
+
+  3.4 Filtros (st.sidebar):
+      - Multiselect "Prefixo Dependência" (opções derivadas dos dados).
+      - Multiselect "Tipo Usuário".
+      - Multiselect "Regras" (R1..R5).
+      - Range slider "Total de regras" (1..5).
+
+  3.5 Visualizações (com plotly.express, já disponível no projeto):
+      - Bar chart: top-20 Prefixos com mais funcionários sinalizados.
+      - Bar chart: distribuição por Tipo Usuário.
+      - Bar chart empilhado: Prefixo × Regra (contagem).
+      - Heatmap: Prefixo × Regra (contagem).
+
+  3.6 Tabela final com todas as colunas + botão CSV
+      (`segmentacao_suspeitos.csv`) via `render_csv_downloads`.
+
+  3.7 Fallback quando o curio estiver indisponível:
+      - Se `integracao_curio` retornar `None` para >30% dos usuários,
+        exibir `st.warning` com "Enriquecimento organizacional
+        indisponível; exibindo agrupamentos apenas por USER_KEY."
+        e cair para agrupar somente por USER_KEY / regra.
+
+--------------------------------------------------------------------------------
+4. MÓDULO COMPARTILHADO — org_enrichment.py
+--------------------------------------------------------------------------------
+
+Arquivo novo:
+  `acr_controle_acesso_dashboard/streamlit_app/org_enrichment.py`
+
+Conteúdo mínimo:
+
+  ```python
+  import re
+  from typing import Optional
+  import streamlit as st
+  from curio_service import integracao_curio
+  from curio_models import PAYLOAD_OP292018V3
+
+  _MATRICULA_RE = re.compile(r"^[A-Za-z]\d{7}$")
+
+
+  def is_matricula(chave: str) -> bool:
+      return bool(chave) and bool(_MATRICULA_RE.match(chave.strip()))
+
+
+  @st.cache_data(ttl=600, show_spinner=False)
+  def fetch_org_data(matricula: str) -> Optional[dict]:
+      if not is_matricula(matricula):
+          return None
+      payload = {**PAYLOAD_OP292018V3,
+                 "codigoClientePesquisa": matricula.upper()}
+      return integracao_curio("op292018v3", payload)
+
+
+  ORG_COLUMNS_PT = {
+      "codigoPrefixoDependenciaAtual": "Prefixo Dependência",
+      "codigoUnidadeOrganizacionalDependenciaUsuario": "Unidade Organizacional",
+      "codigoInstituicaoOrganizacionalUsuario": "Instituição Organizacional",
+      "codigoTipoUsuario": "Tipo Usuário",
+      "codigoComissaoUsuario": "Comissão",
+      "codigoReferenciaOrganizacionalPerfil": "Referência Perfil",
+      "numeroMatriculaUsuario": "Matrícula",
+  }
+
+
+  def flatten_org(record: Optional[dict]) -> dict:
+      if not record:
+          return {v: None for v in ORG_COLUMNS_PT.values()}
+      return {v: record.get(k) for k, v in ORG_COLUMNS_PT.items()}
+  ```
+
+Ambas as páginas devem importar `fetch_org_data`, `is_matricula`,
+`flatten_org`, `ORG_COLUMNS_PT` daqui.
+
+--------------------------------------------------------------------------------
+5. TESTES
+--------------------------------------------------------------------------------
+
+Backtest (`backtest_vpn_local`):
+  `.venv/bin/python -m unittest discover -s tests`   (não pode regredir)
+
+Dashboard (`acr-controle-acesso-dashboard`):
+  Ver `tests/unit/test_logins_suspeitos.py`, `test_curio_service.py`,
+  `test_curio_models.py` como referência. Escreva:
+    `tests/unit/test_org_enrichment.py`
+      - is_matricula aceita F1234567, rejeita "U-xxx" e vazio.
+      - flatten_org devolve dict pt-BR com None quando `record=None`.
+      - flatten_org mapeia todas as chaves de `ORG_COLUMNS_PT`.
+      - fetch_org_data devolve None para chave inválida sem chamar rede.
+    `tests/unit/test_sumario_negocial.py`
+      - Fabrica bundle mínimo com R1..R5 sample fixo (pseudonimizados),
+        importa a função que constrói a matriz regras × usuários e
+        confere shape/valores.
+      - Confere que o download `matriz_regras_x_usuarios.csv` gera CSV
+        parseável com colunas R1..R5 e `total_regras`.
+    `tests/unit/test_segmentacao_suspeitos.py`
+      - Com curio mockado, confere que agregação por Prefixo devolve
+        contagens corretas.
+      - Com curio devolvendo None para >30% dos usuários, confere que
+        o fallback é ativado (função helper testável).
+
+Extraia para funções puras a lógica de agregação (fora do escopo
+Streamlit) para permitir teste sem `st.*`.
+
+Rodar:
+  `pytest -q tests/unit/test_org_enrichment.py \
+                 tests/unit/test_sumario_negocial.py \
+                 tests/unit/test_segmentacao_suspeitos.py`
+
+Se `pytest` não estiver disponível, use `python -m unittest`.
+
+--------------------------------------------------------------------------------
+6. GRAMÁTICA / ACENTOS pt-BR — varredura final
+--------------------------------------------------------------------------------
+
+Nos arquivos tocados neste prompt (páginas novas + módulos + HTMs
+copiados), fazer varredura por padrões comuns sem acento e corrigir:
+
+  Usuario→Usuário   Usuarios→Usuários   periodo→período
+  sessao→sessão     analise→análise      acao→ação
+  acoes→ações       nao→não              e→é (quando verbo)
+  esta→está (quando verbo)               ja→já
+  Metodologia (sem acento; ok)          hora→hora (ok)
+  Comissao→Comissão   Referencia→Referência   Instituicao→Instituição
+  Dependencia→Dependência                Segmentacao→Segmentação
+  Sumario→Sumário    Negocio→Negócio     Negocial (ok, sem acento)
+  proxima→próxima    tambem→também       Nao→Não
+
+Somente strings visíveis; NÃO tocar nomes de variável/identificadores,
+nomes de colunas SQL, chaves de payload curio (elas precisam bater
+literalmente com o contrato).
+
+--------------------------------------------------------------------------------
+7. CHANGELOG + VERSÃO
+--------------------------------------------------------------------------------
+
+Bump `acr_controle_acesso_dashboard/__init__.py` para `2.0.27`.
+Adicionar entrada em `CHANGELOG.md` (acima da 2.0.26) descrevendo:
+  - Nova página "Sumário Negocial" (impacto de bloqueio + CSVs).
+  - Nova página "Segmentação de Suspeitos" (agrupamento organizacional
+    via curio op292018v3).
+  - Módulo compartilhado `org_enrichment.py`.
+  - Bundle do backtest atualizado (janela recente, ~48 h).
+  - Varredura pt-BR.
+
+--------------------------------------------------------------------------------
+8. COMMITS + PUSH
+--------------------------------------------------------------------------------
+
+Ordem de commit (atômicos por escopo, mensagens em pt-BR, Conventional
+Commits):
+
+  A. Em `bbvinet/acr-controle-acesso-dashboard` (main):
+     - Um commit único ou dois (páginas novas + bundle+static). Ex.:
+       ```
+       feat(dashboard): páginas de sumário negocial e segmentação de suspeitos com enriquecimento curio
+
+       - Nova página `pages/sumario_negocial.py`: impacto de bloqueio por
+         regra (funcionários e eventos afetados), tabelas e CSVs por regra
+         e no rodapé.
+       - Nova página `pages/segmentacao_suspeitos.py`: agrupamento por
+         Prefixo Dependência, Unidade Organizacional, Tipo Usuário e Regra,
+         com heatmap e filtros.
+       - Módulo `streamlit_app/org_enrichment.py` reutilizável para
+         enriquecimento via curio op292018v3.
+       - Bundle e HTM do backtest atualizados (janela ~48 h).
+       - Varredura pt-BR e bump para 2.0.27.
+
+       Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+       ```
+     - `git push origin main`.
+
+  B. Em `bbvinet/deploy-acr-controle-acesso-dashboard` (cloud/homologacao):
+     - Somente se houve alteração de versão de imagem/tag. Caso o deploy
+       pin da imagem esteja no repo, bump para a nova tag. Caso contrário,
+       NÃO gerar commit vazio.
+
+  C. Em `SaganGromov/NEW_HU_072026` (master):
+     - Se você modificou algum arquivo em `backtest_vpn_local/`, faça
+       commit LOCAL (sem push). Não tente `git push origin master` —
+       F7021988 não tem permissão.
+     - Ao terminar, mostre ao usuário o hash local para que ele mesmo
+       faça o push com credencial adequada.
+
+Sanidade pré-commit em cada repo:
+  ```bash
+  git status --short
+  git diff --stat
+  ```
+Confirmar que `db2_credentials.json`, `.env`, `reports/`, `.pseudonym_key`,
+`extracts/`, `adjudication/`, `__pycache__/`, `*.egg-info/` estão
+excluídos (checar `.gitignore` de cada repo antes do `git add`).
+
+--------------------------------------------------------------------------------
+9. VALIDAÇÃO FINAL
+--------------------------------------------------------------------------------
+
+Ao fim, verificar:
+  [ ] `.venv/bin/python -m unittest discover -s tests` no
+      `backtest_vpn_local` — 17+ testes verdes.
+  [ ] `pytest -q` (ou `python -m unittest`) para os 3 novos módulos de
+      teste no dashboard — todos verdes.
+  [ ] `results_bundle_<STAMP>.json` recente presente em
+      `static/backtest_vpn/`, com R5 status="ok".
+  [ ] `latest.htm` e `latest.fragment.htm` atualizados; grep de acentos
+      não revela mais palavras sem acento na lista da §6.
+  [ ] Push OK em `bbvinet/acr-controle-acesso-dashboard`.
+  [ ] Nenhum push tentado em `SaganGromov/NEW_HU_072026`.
+  [ ] Nenhuma credencial commitada (rodar
+      `git log -p -S 'db2_credentials' | head`).
+
+Reportar no fim ao usuário:
+  * commits (hash + repo + mensagem curta);
+  * push executado / suprimido;
+  * resumo da rodada de backtest (janela, R5 flagged / flagged_users);
+  * novas páginas criadas e como acessar.
+================================================================================

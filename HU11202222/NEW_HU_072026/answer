@@ -1,0 +1,25 @@
+The backtest_vpn_local/ project is complete at /home/sagan/NEW_HU_072026/backtest_vpn_local/, following every requirement in prompt.txt. Since I have a filesystem, I wrote the files directly instead of dumping them inline — same content, ready to copy to the DB2-connected machine.
+
+Files produced (all 10 from section 5): pyproject.toml, README.md (pt-BR), .env.example, run_backtest.sh (POSIX sh, executable, uv-only), and src/backtest_vpn/{__init__,config,db2,rules,report,cli}.py. No venv, no __pycache__, no requirements.txt, no credentials file.
+
+Key decisions and spec-compliance points:
+
+- User column defaults to CD_USU_AUT everywhere (CLI default, env fallback, .env.example, README) — never CD_USU.
+- Identifier safety: every schema/table/coluia normalize_identifier before any SQLinterpolation; only literal values (dates, HAVING limits, network value) are bound with ?. The validated integers sample_limit and active_window_hours are interpolated (DB2 doesn't reliably accept parameter markers in FETCH FIRST n ROWS / labeled durations), which the spec's
+- Catalog detection: get_table_columns tries SYSCAT.COLUMNS first, falls back to SYSIBM.SYSCOLUMNS (TBCREATOR/TBNAME) on any failure; validate_columns raises a ValueError naming missing columns and listing available ones, so no raw SQL0206N surfaces.
+- Cases: summary, three distinct-limit cases (source+corporate IPs with OR across the two columns, hostnames, devices), daily-volume case, and the physical-login policy case using the exact join formula from section 4 w<window> HOURS and optional trimmed network  and value are set; setting just one is aclear config error). Missing physical table → status="skipped" with a note, other cases still run. FP/FN report as not_available_without_validated_labels.                                                                      - Credentials: read only from the JSON file db2_credentials.json, resolved against theapp dir since the runner cds there); password never printed, never in the parameters payload, no PWD= in any log line — verified by an assertion in my smoke test.                                                                 - Verification done offline (no DB2 here, asules compile, sh -n passes on the runner, and a stubbed-ibm_db smoke test exercised JDBC parsing, datetime parsing, identifier rejection (1ABC, A-B, DROP;TABLE, etc.), dotenv precedence (existing env wins), JSON/Markdown report generation, full CLI config building with physical-table defaults inheriting from VPN , and secret-leak absence. All passed.
+
+How to run (on the target machine):
+
+# 1. Install uv (once)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2. Place backtest_vpn_local/ as a sibling of gravar_dados_vpn/, e.g.:
+#    /home/wsl/HU11202222/backtest_vpn_local/
+
+# 3. Run from anywhere:
+/home/wsl/HU11202222/backtest_vpn_local/run_backtest.sh \
+    --start 2026-06-01 --end 2026-07-01
+
+# 4. Reports are written to:
+/home/wsl/HU11202222/backtest_vpn_local/reports/

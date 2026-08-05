@@ -1,0 +1,1051 @@
+{
+  "generated_at": "2026-07-15 21:05:47",
+  "parameters": {
+    "start": "2026-06-01 00:00:00",
+    "end": "2026-07-01 00:00:00",
+    "jdbc_url": "jdbc:db2://b2db2g5.plexbs2.bb.com.br:61250/B2DB2G5",
+    "credentials_file": "/home/wsl/HU11202222/gravar_dados_vpn/db2_credentials.json",
+    "vpn_schema": "DB2PEP",
+    "vpn_table": "AUT_CPTV",
+    "user_column": "CD_USU_AUT",
+    "timestamp_column": "TS_TRAN",
+    "source_ip_column": "CD_END_LGC_OGM",
+    "corporate_ip_column": "CD_END_LGC_CPTV",
+    "hostname_column": "NM_DSVO",
+    "device_column": "CD_IDFC_DSVO",
+    "physical_table_config": null,
+    "active_window_hours": 8,
+    "distinct_limit": 2,
+    "daily_login_limit": 10,
+    "sample_limit": 50,
+    "output_dir": "/home/wsl/HU11202222/backtest_vpn_local/reports"
+  },
+  "metrics": {
+    "total_events_analyzed": 569299,
+    "total_users_analyzed": 33708,
+    "vpn_classified_cases": 569299,
+    "false_positive_rate": "not_available_without_validated_labels",
+    "false_negative_rate": "not_available_without_validated_labels"
+  },
+  "cases": [
+    {
+      "name": "ips_distintos_acima_do_limite",
+      "status": "ok",
+      "count": 31243,
+      "sample": [
+        {
+          "USER_KEY": null,
+          "EVENTS": 4094,
+          "DISTINCT_CD_END_LGC_OGM": 1509,
+          "DISTINCT_CD_END_LGC_CPTV": 557
+        },
+        {
+          "USER_KEY": "F0737998",
+          "EVENTS": 213,
+          "DISTINCT_CD_END_LGC_OGM": 14,
+          "DISTINCT_CD_END_LGC_CPTV": 191
+        },
+        {
+          "USER_KEY": "F8458999",
+          "EVENTS": 153,
+          "DISTINCT_CD_END_LGC_OGM": 2,
+          "DISTINCT_CD_END_LGC_CPTV": 143
+        },
+        {
+          "USER_KEY": "F4324234",
+          "EVENTS": 145,
+          "DISTINCT_CD_END_LGC_OGM": 1,
+          "DISTINCT_CD_END_LGC_CPTV": 128
+        },
+        {
+          "USER_KEY": "F6817053",
+          "EVENTS": 141,
+          "DISTINCT_CD_END_LGC_OGM": 7,
+          "DISTINCT_CD_END_LGC_CPTV": 135
+        },
+        {
+          "USER_KEY": "F0724261",
+          "EVENTS": 137,
+          "DISTINCT_CD_END_LGC_OGM": 8,
+          "DISTINCT_CD_END_LGC_CPTV": 117
+        },
+        {
+          "USER_KEY": "F3877345",
+          "EVENTS": 136,
+          "DISTINCT_CD_END_LGC_OGM": 8,
+          "DISTINCT_CD_END_LGC_CPTV": 129
+        },
+        {
+          "USER_KEY": "F6880964",
+          "EVENTS": 128,
+          "DISTINCT_CD_END_LGC_OGM": 7,
+          "DISTINCT_CD_END_LGC_CPTV": 120
+        },
+        {
+          "USER_KEY": "F9170469",
+          "EVENTS": 122,
+          "DISTINCT_CD_END_LGC_OGM": 1,
+          "DISTINCT_CD_END_LGC_CPTV": 116
+        },
+        {
+          "USER_KEY": "F6750699",
+          "EVENTS": 116,
+          "DISTINCT_CD_END_LGC_OGM": 17,
+          "DISTINCT_CD_END_LGC_CPTV": 111
+        },
+        {
+          "USER_KEY": "F6212353",
+          "EVENTS": 115,
+          "DISTINCT_CD_END_LGC_OGM": 6,
+          "DISTINCT_CD_END_LGC_CPTV": 107
+        },
+        {
+          "USER_KEY": "F2080238",
+          "EVENTS": 114,
+          "DISTINCT_CD_END_LGC_OGM": 11,
+          "DISTINCT_CD_END_LGC_CPTV": 111
+        },
+        {
+          "USER_KEY": "F1963929",
+          "EVENTS": 111,
+          "DISTINCT_CD_END_LGC_OGM": 11,
+          "DISTINCT_CD_END_LGC_CPTV": 86
+        },
+        {
+          "USER_KEY": "F1653995",
+          "EVENTS": 109,
+          "DISTINCT_CD_END_LGC_OGM": 2,
+          "DISTINCT_CD_END_LGC_CPTV": 100
+        },
+        {
+          "USER_KEY": "F3514379",
+          "EVENTS": 100,
+          "DISTINCT_CD_END_LGC_OGM": 53,
+          "DISTINCT_CD_END_LGC_CPTV": 89
+        },
+        {
+          "USER_KEY": "F0055379",
+          "EVENTS": 100,
+          "DISTINCT_CD_END_LGC_OGM": 4,
+          "DISTINCT_CD_END_LGC_CPTV": 95
+        },
+        {
+          "USER_KEY": "F9839343",
+          "EVENTS": 99,
+          "DISTINCT_CD_END_LGC_OGM": 6,
+          "DISTINCT_CD_END_LGC_CPTV": 90
+        },
+        {
+          "USER_KEY": "F3288689",
+          "EVENTS": 99,
+          "DISTINCT_CD_END_LGC_OGM": 23,
+          "DISTINCT_CD_END_LGC_CPTV": 75
+        },
+        {
+          "USER_KEY": "F6365418",
+          "EVENTS": 96,
+          "DISTINCT_CD_END_LGC_OGM": 5,
+          "DISTINCT_CD_END_LGC_CPTV": 87
+        },
+        {
+          "USER_KEY": "F7092858",
+          "EVENTS": 95,
+          "DISTINCT_CD_END_LGC_OGM": 1,
+          "DISTINCT_CD_END_LGC_CPTV": 82
+        },
+        {
+          "USER_KEY": "F6770283",
+          "EVENTS": 93,
+          "DISTINCT_CD_END_LGC_OGM": 5,
+          "DISTINCT_CD_END_LGC_CPTV": 84
+        },
+        {
+          "USER_KEY": "F1692871",
+          "EVENTS": 92,
+          "DISTINCT_CD_END_LGC_OGM": 7,
+          "DISTINCT_CD_END_LGC_CPTV": 88
+        },
+        {
+          "USER_KEY": "F9441639",
+          "EVENTS": 89,
+          "DISTINCT_CD_END_LGC_OGM": 1,
+          "DISTINCT_CD_END_LGC_CPTV": 85
+        },
+        {
+          "USER_KEY": "F8988459",
+          "EVENTS": 88,
+          "DISTINCT_CD_END_LGC_OGM": 2,
+          "DISTINCT_CD_END_LGC_CPTV": 83
+        },
+        {
+          "USER_KEY": "F6811925",
+          "EVENTS": 88,
+          "DISTINCT_CD_END_LGC_OGM": 8,
+          "DISTINCT_CD_END_LGC_CPTV": 81
+        },
+        {
+          "USER_KEY": "F4839099",
+          "EVENTS": 88,
+          "DISTINCT_CD_END_LGC_OGM": 4,
+          "DISTINCT_CD_END_LGC_CPTV": 82
+        },
+        {
+          "USER_KEY": "F2483319",
+          "EVENTS": 87,
+          "DISTINCT_CD_END_LGC_OGM": 9,
+          "DISTINCT_CD_END_LGC_CPTV": 79
+        },
+        {
+          "USER_KEY": "F8200831",
+          "EVENTS": 83,
+          "DISTINCT_CD_END_LGC_OGM": 14,
+          "DISTINCT_CD_END_LGC_CPTV": 81
+        },
+        {
+          "USER_KEY": "F4437749",
+          "EVENTS": 81,
+          "DISTINCT_CD_END_LGC_OGM": 41,
+          "DISTINCT_CD_END_LGC_CPTV": 76
+        },
+        {
+          "USER_KEY": "F8600998",
+          "EVENTS": 81,
+          "DISTINCT_CD_END_LGC_OGM": 8,
+          "DISTINCT_CD_END_LGC_CPTV": 75
+        },
+        {
+          "USER_KEY": "F1461319",
+          "EVENTS": 81,
+          "DISTINCT_CD_END_LGC_OGM": 3,
+          "DISTINCT_CD_END_LGC_CPTV": 80
+        },
+        {
+          "USER_KEY": "F9329189",
+          "EVENTS": 80,
+          "DISTINCT_CD_END_LGC_OGM": 5,
+          "DISTINCT_CD_END_LGC_CPTV": 71
+        },
+        {
+          "USER_KEY": "F6813769",
+          "EVENTS": 80,
+          "DISTINCT_CD_END_LGC_OGM": 3,
+          "DISTINCT_CD_END_LGC_CPTV": 75
+        },
+        {
+          "USER_KEY": "C1317405",
+          "EVENTS": 80,
+          "DISTINCT_CD_END_LGC_OGM": 7,
+          "DISTINCT_CD_END_LGC_CPTV": 74
+        },
+        {
+          "USER_KEY": "C1333663",
+          "EVENTS": 79,
+          "DISTINCT_CD_END_LGC_OGM": 5,
+          "DISTINCT_CD_END_LGC_CPTV": 70
+        },
+        {
+          "USER_KEY": "F6794003",
+          "EVENTS": 78,
+          "DISTINCT_CD_END_LGC_OGM": 1,
+          "DISTINCT_CD_END_LGC_CPTV": 73
+        },
+        {
+          "USER_KEY": "F2258674",
+          "EVENTS": 78,
+          "DISTINCT_CD_END_LGC_OGM": 3,
+          "DISTINCT_CD_END_LGC_CPTV": 76
+        },
+        {
+          "USER_KEY": "F6075077",
+          "EVENTS": 77,
+          "DISTINCT_CD_END_LGC_OGM": 2,
+          "DISTINCT_CD_END_LGC_CPTV": 67
+        },
+        {
+          "USER_KEY": "F1553419",
+          "EVENTS": 77,
+          "DISTINCT_CD_END_LGC_OGM": 8,
+          "DISTINCT_CD_END_LGC_CPTV": 73
+        },
+        {
+          "USER_KEY": "F8789824",
+          "EVENTS": 76,
+          "DISTINCT_CD_END_LGC_OGM": 1,
+          "DISTINCT_CD_END_LGC_CPTV": 70
+        },
+        {
+          "USER_KEY": "F9197989",
+          "EVENTS": 76,
+          "DISTINCT_CD_END_LGC_OGM": 20,
+          "DISTINCT_CD_END_LGC_CPTV": 65
+        },
+        {
+          "USER_KEY": "F2100394",
+          "EVENTS": 76,
+          "DISTINCT_CD_END_LGC_OGM": 4,
+          "DISTINCT_CD_END_LGC_CPTV": 64
+        },
+        {
+          "USER_KEY": "F1809315",
+          "EVENTS": 76,
+          "DISTINCT_CD_END_LGC_OGM": 34,
+          "DISTINCT_CD_END_LGC_CPTV": 75
+        },
+        {
+          "USER_KEY": "F6001506",
+          "EVENTS": 75,
+          "DISTINCT_CD_END_LGC_OGM": 8,
+          "DISTINCT_CD_END_LGC_CPTV": 70
+        },
+        {
+          "USER_KEY": "F1729968",
+          "EVENTS": 75,
+          "DISTINCT_CD_END_LGC_OGM": 6,
+          "DISTINCT_CD_END_LGC_CPTV": 68
+        },
+        {
+          "USER_KEY": "F6770080",
+          "EVENTS": 74,
+          "DISTINCT_CD_END_LGC_OGM": 7,
+          "DISTINCT_CD_END_LGC_CPTV": 72
+        },
+        {
+          "USER_KEY": "F6854748",
+          "EVENTS": 74,
+          "DISTINCT_CD_END_LGC_OGM": 7,
+          "DISTINCT_CD_END_LGC_CPTV": 69
+        },
+        {
+          "USER_KEY": "F6322452",
+          "EVENTS": 74,
+          "DISTINCT_CD_END_LGC_OGM": 2,
+          "DISTINCT_CD_END_LGC_CPTV": 69
+        },
+        {
+          "USER_KEY": "F0742785",
+          "EVENTS": 74,
+          "DISTINCT_CD_END_LGC_OGM": 4,
+          "DISTINCT_CD_END_LGC_CPTV": 70
+        },
+        {
+          "USER_KEY": "F6324513",
+          "EVENTS": 73,
+          "DISTINCT_CD_END_LGC_OGM": 5,
+          "DISTINCT_CD_END_LGC_CPTV": 68
+        }
+      ],
+      "note": "Usuarios com mais de 2 IPs distintos (origem ou corporativo) no periodo."
+    },
+    {
+      "name": "hostnames_distintos_acima_do_limite",
+      "status": "ok",
+      "count": 36,
+      "sample": [
+        {
+          "USER_KEY": null,
+          "EVENTS": 4094,
+          "DISTINCT_NM_DSVO": 54
+        },
+        {
+          "USER_KEY": "F2724978",
+          "EVENTS": 65,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F4111558",
+          "EVENTS": 54,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F3248859",
+          "EVENTS": 49,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F0126473",
+          "EVENTS": 45,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F9540122",
+          "EVENTS": 44,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F6367825",
+          "EVENTS": 44,
+          "DISTINCT_NM_DSVO": 4
+        },
+        {
+          "USER_KEY": "F0173117",
+          "EVENTS": 43,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F0739958",
+          "EVENTS": 42,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "C1338505",
+          "EVENTS": 38,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F0428064",
+          "EVENTS": 37,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F2844150",
+          "EVENTS": 36,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "C1346938",
+          "EVENTS": 34,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F2331645",
+          "EVENTS": 33,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F6325640",
+          "EVENTS": 29,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F8367535",
+          "EVENTS": 28,
+          "DISTINCT_NM_DSVO": 4
+        },
+        {
+          "USER_KEY": "C1323613",
+          "EVENTS": 28,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F9539140",
+          "EVENTS": 27,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F9795481",
+          "EVENTS": 25,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F9522678",
+          "EVENTS": 25,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F4619409",
+          "EVENTS": 25,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F8712819",
+          "EVENTS": 20,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F6027638",
+          "EVENTS": 20,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F9181073",
+          "EVENTS": 19,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F1807402",
+          "EVENTS": 17,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F2965002",
+          "EVENTS": 16,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F9275903",
+          "EVENTS": 14,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F6446781",
+          "EVENTS": 14,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F3548944",
+          "EVENTS": 13,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F8712541",
+          "EVENTS": 12,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F1709156",
+          "EVENTS": 11,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "Z1174850",
+          "EVENTS": 10,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F1557388",
+          "EVENTS": 10,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F0743820",
+          "EVENTS": 10,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F1832821",
+          "EVENTS": 9,
+          "DISTINCT_NM_DSVO": 3
+        },
+        {
+          "USER_KEY": "F7055892",
+          "EVENTS": 5,
+          "DISTINCT_NM_DSVO": 3
+        }
+      ],
+      "note": "Usuarios com mais de 2 hostnames distintos no periodo."
+    },
+    {
+      "name": "dispositivos_distintos_acima_do_limite",
+      "status": "ok",
+      "count": 56,
+      "sample": [
+        {
+          "USER_KEY": null,
+          "EVENTS": 4094,
+          "DISTINCT_CD_IDFC_DSVO": 178
+        },
+        {
+          "USER_KEY": "C1343461",
+          "EVENTS": 68,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F6323258",
+          "EVENTS": 66,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F2724978",
+          "EVENTS": 65,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F4111558",
+          "EVENTS": 54,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F5078775",
+          "EVENTS": 53,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F3248859",
+          "EVENTS": 49,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F0126473",
+          "EVENTS": 45,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F9540122",
+          "EVENTS": 44,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F6367825",
+          "EVENTS": 44,
+          "DISTINCT_CD_IDFC_DSVO": 4
+        },
+        {
+          "USER_KEY": "F0173117",
+          "EVENTS": 43,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F8116033",
+          "EVENTS": 42,
+          "DISTINCT_CD_IDFC_DSVO": 5
+        },
+        {
+          "USER_KEY": "F0739958",
+          "EVENTS": 42,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "C1338505",
+          "EVENTS": 38,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F0428064",
+          "EVENTS": 37,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F2877787",
+          "EVENTS": 36,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F2844150",
+          "EVENTS": 36,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F2331645",
+          "EVENTS": 33,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "C1323554",
+          "EVENTS": 33,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F6320854",
+          "EVENTS": 32,
+          "DISTINCT_CD_IDFC_DSVO": 4
+        },
+        {
+          "USER_KEY": "F9342575",
+          "EVENTS": 30,
+          "DISTINCT_CD_IDFC_DSVO": 4
+        },
+        {
+          "USER_KEY": "F6325640",
+          "EVENTS": 29,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F8528034",
+          "EVENTS": 29,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F2455215",
+          "EVENTS": 29,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F8367535",
+          "EVENTS": 28,
+          "DISTINCT_CD_IDFC_DSVO": 4
+        },
+        {
+          "USER_KEY": "C1323613",
+          "EVENTS": 28,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F9539140",
+          "EVENTS": 27,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F8223718",
+          "EVENTS": 26,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F8711688",
+          "EVENTS": 26,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F3800598",
+          "EVENTS": 26,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F9522678",
+          "EVENTS": 25,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F9795481",
+          "EVENTS": 25,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F4619409",
+          "EVENTS": 25,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F8029529",
+          "EVENTS": 23,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F2690779",
+          "EVENTS": 22,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F8712819",
+          "EVENTS": 20,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F6027638",
+          "EVENTS": 20,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F9181073",
+          "EVENTS": 19,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F0650998",
+          "EVENTS": 19,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F1785201",
+          "EVENTS": 18,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F1807402",
+          "EVENTS": 17,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F8944556",
+          "EVENTS": 16,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F2965002",
+          "EVENTS": 16,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F0740996",
+          "EVENTS": 16,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F3830367",
+          "EVENTS": 15,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F9275903",
+          "EVENTS": 14,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F6446781",
+          "EVENTS": 14,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F7002571",
+          "EVENTS": 13,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F3548944",
+          "EVENTS": 13,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        },
+        {
+          "USER_KEY": "F6001741",
+          "EVENTS": 11,
+          "DISTINCT_CD_IDFC_DSVO": 3
+        }
+      ],
+      "note": "Usuarios com mais de 2 identificadores de dispositivo distintos no periodo."
+    },
+    {
+      "name": "logins_diarios_acima_do_limite",
+      "status": "ok",
+      "count": 407,
+      "sample": [
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-25",
+          "LOGIN_COUNT": 227
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-18",
+          "LOGIN_COUNT": 223
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-12",
+          "LOGIN_COUNT": 214
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-03",
+          "LOGIN_COUNT": 211
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-17",
+          "LOGIN_COUNT": 210
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-08",
+          "LOGIN_COUNT": 199
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-19",
+          "LOGIN_COUNT": 198
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-01",
+          "LOGIN_COUNT": 198
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-24",
+          "LOGIN_COUNT": 197
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-22",
+          "LOGIN_COUNT": 187
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-02",
+          "LOGIN_COUNT": 183
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-23",
+          "LOGIN_COUNT": 178
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-11",
+          "LOGIN_COUNT": 178
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-05",
+          "LOGIN_COUNT": 175
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-10",
+          "LOGIN_COUNT": 172
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-16",
+          "LOGIN_COUNT": 169
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-15",
+          "LOGIN_COUNT": 167
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-29",
+          "LOGIN_COUNT": 153
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-26",
+          "LOGIN_COUNT": 151
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-09",
+          "LOGIN_COUNT": 147
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-30",
+          "LOGIN_COUNT": 136
+        },
+        {
+          "USER_KEY": "F7092858",
+          "LOGIN_DATE": "2026-06-01",
+          "LOGIN_COUNT": 56
+        },
+        {
+          "USER_KEY": "F0225651",
+          "LOGIN_DATE": "2026-06-01",
+          "LOGIN_COUNT": 44
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-20",
+          "LOGIN_COUNT": 41
+        },
+        {
+          "USER_KEY": "F9441639",
+          "LOGIN_DATE": "2026-06-15",
+          "LOGIN_COUNT": 37
+        },
+        {
+          "USER_KEY": "C1342810",
+          "LOGIN_DATE": "2026-06-11",
+          "LOGIN_COUNT": 36
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-04",
+          "LOGIN_COUNT": 35
+        },
+        {
+          "USER_KEY": "F9524438",
+          "LOGIN_DATE": "2026-06-11",
+          "LOGIN_COUNT": 33
+        },
+        {
+          "USER_KEY": "F8988459",
+          "LOGIN_DATE": "2026-06-23",
+          "LOGIN_COUNT": 33
+        },
+        {
+          "USER_KEY": "F3523957",
+          "LOGIN_DATE": "2026-06-02",
+          "LOGIN_COUNT": 31
+        },
+        {
+          "USER_KEY": "F5971139",
+          "LOGIN_DATE": "2026-06-27",
+          "LOGIN_COUNT": 29
+        },
+        {
+          "USER_KEY": "F6581949",
+          "LOGIN_DATE": "2026-06-07",
+          "LOGIN_COUNT": 28
+        },
+        {
+          "USER_KEY": "F8282979",
+          "LOGIN_DATE": "2026-06-29",
+          "LOGIN_COUNT": 27
+        },
+        {
+          "USER_KEY": "F1839241",
+          "LOGIN_DATE": "2026-06-12",
+          "LOGIN_COUNT": 27
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-21",
+          "LOGIN_COUNT": 26
+        },
+        {
+          "USER_KEY": "F0722359",
+          "LOGIN_DATE": "2026-06-24",
+          "LOGIN_COUNT": 26
+        },
+        {
+          "USER_KEY": "F6322452",
+          "LOGIN_DATE": "2026-06-12",
+          "LOGIN_COUNT": 25
+        },
+        {
+          "USER_KEY": "F6210703",
+          "LOGIN_DATE": "2026-06-01",
+          "LOGIN_COUNT": 25
+        },
+        {
+          "USER_KEY": "F0739958",
+          "LOGIN_DATE": "2026-06-29",
+          "LOGIN_COUNT": 25
+        },
+        {
+          "USER_KEY": "F0737998",
+          "LOGIN_DATE": "2026-06-30",
+          "LOGIN_COUNT": 25
+        },
+        {
+          "USER_KEY": "F7205817",
+          "LOGIN_DATE": "2026-06-17",
+          "LOGIN_COUNT": 24
+        },
+        {
+          "USER_KEY": "F6440621",
+          "LOGIN_DATE": "2026-06-01",
+          "LOGIN_COUNT": 24
+        },
+        {
+          "USER_KEY": "F6750699",
+          "LOGIN_DATE": "2026-06-11",
+          "LOGIN_COUNT": 24
+        },
+        {
+          "USER_KEY": "F2724978",
+          "LOGIN_DATE": "2026-06-01",
+          "LOGIN_COUNT": 24
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-27",
+          "LOGIN_COUNT": 23
+        },
+        {
+          "USER_KEY": "F7092858",
+          "LOGIN_DATE": "2026-06-02",
+          "LOGIN_COUNT": 23
+        },
+        {
+          "USER_KEY": "F4289001",
+          "LOGIN_DATE": "2026-06-30",
+          "LOGIN_COUNT": 23
+        },
+        {
+          "USER_KEY": null,
+          "LOGIN_DATE": "2026-06-06",
+          "LOGIN_COUNT": 23
+        },
+        {
+          "USER_KEY": "F6365418",
+          "LOGIN_DATE": "2026-06-11",
+          "LOGIN_COUNT": 23
+        },
+        {
+          "USER_KEY": "F2257501",
+          "LOGIN_DATE": "2026-06-25",
+          "LOGIN_COUNT": 23
+        }
+      ],
+      "note": "Pares usuario+dia com mais de 10 logins no mesmo dia."
+    },
+    {
+      "name": "vpn_ativa_com_login_em_rede_fisica",
+      "status": "skipped",
+      "count": 0,
+      "sample": [],
+      "note": "Tabela de login em rede fisica nao configurada (--physical-table / PHYSICAL_TABLE); caso nao executado. Os demais casos foram executados normalmente."
+    }
+  ]
+}

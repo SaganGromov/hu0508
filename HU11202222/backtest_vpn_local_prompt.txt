@@ -1,0 +1,440 @@
+# PROMPT: Author (offline) a local Python DB2 VPN backtest application
+
+You are an autonomous coding AI. You DO NOT have network access, DO NOT have
+access to a DB2 database, and cannot execute the code against real data. Your
+sole job is to WRITE the source files. A separate operator will later copy
+your output to a machine that has DB2 connectivity and run it there.
+
+Because you cannot test against DB2, correctness of SQL, column names, and
+runtime behavior is your responsibility based strictly on the reference
+material embedded in this prompt. Do not invent columns. Do not add features
+that require live discovery.
+
+--------------------------------------------------------------------------------
+## 0. Output contract
+
+Emit a single, self-contained project as a set of files. Present each file
+with a clear header line of the form:
+
+    ===== FILE: <relative/path> =====
+
+followed by the full file body. No commentary between files. After the last
+file, print a short "How to run" block with the exact commands the operator
+must execute on the target machine.
+
+All files together must form a project directory named `backtest_vpn_local/`.
+The operator will drop that directory as a sibling of an existing
+`gravar_dados_vpn/` directory (see section 2).
+
+Do not attempt to run anything. Do not ask questions. Do not add TODOs.
+
+--------------------------------------------------------------------------------
+## 1. Target runtime (assume, do not verify)
+
+- OS: Linux (WSL Ubuntu-like). POSIX sh available. `uv` will be installed by
+  the operator via `curl -LsSf https://astral.sh/uv/install.sh | sh`.
+- Python: >=3.9. Use only stdlib + `ibm-db>=3.2.0`. No other dependencies.
+- DB2 server:
+    JDBC URL: jdbc:db2://b2db2g5.plexbs2.bb.com.br:61250/B2DB2G5
+    Host: b2db2g5.plexbs2.bb.com.br
+    Port: 61250
+    Database: B2DB2G5
+    Protocol: TCPIP
+  Catalog dialect may be DB2 LUW (`SYSCAT.COLUMNS`) or z/OS
+  (`SYSIBM.SYSCOLUMNS`). Support both by trying SYSCAT first and falling back
+  to SYSIBM on failure.
+
+- DB2 credentials come only from a JSON file with the exact shape:
+    {"username": "...", "password": "..."}
+  Default path relative to the app directory:
+    ../gravar_dados_vpn/db2_credentials.json
+  Never accept password on CLI or env. Never log the password, never build
+  log lines containing `PWD=`.
+
+--------------------------------------------------------------------------------
+## 2. Sibling directory that already exists on the operator's machine
+
+You do NOT need to read it or reproduce it, but be aware it exists and your
+defaults must line up with it:
+
+    <project_root>/gravar_dados_vpn/
+        db2_credentials.json        <- your app must read this file
+        tabela_vpn.md               <- documentation of DB2PEP.AUT_CPTV
+        vpn_data_writer.py          <- reference ibm_db connection pattern
+        explorar_tabela_vpn.py      <- reference SYSCAT/SYSIBM detection
+
+Your generated project must live in:
+
+    <project_root>/backtest_vpn_local/
+
+--------------------------------------------------------------------------------
+## 3. Authoritative facts about the DB2 VPN table
+
+Table (default):
+    Schema: DB2PEP
+    Table:  AUT_CPTV
+    Fully qualified: DB2PEP.AUT_CPTV
+    Monthly volumetry: ~10 million rows.
+
+Physical columns and DB2 datatypes:
+
+    CD_IDFR_MTA      decimal(11)   NOT NULL   PK, sequential
+    CD_UNCO_TRAN     char(43)      NULL       Session UID
+    TS_TRAN          timestamp     NOT NULL   Event timestamp
+    NR_PTC           smallint      NOT NULL   Partition = month of TS_TRAN
+    CD_END_LGC_OGM   char(15)      NULL       Source IP (origin)
+    CD_END_LGC_CPTV  char(15)      NULL       Corporate IP
+    NM_MTD_AUT       char(30)      NULL       Auth method
+    NM_DSVO          char(50)      NULL       Device hostname
+    CD_END_FSCO      char(22)      NULL       MAC address
+    CD_IDFC_DSVO     char(40)      NULL       Device ID
+    CD_IDFC_ACSS     char(60)      NULL       Certificate fingerprint
+    NM_SO            char(20)      NULL       OS name
+    CD_VRS_SO        char(10)      NULL       OS version
+    CD_TIP_CNXO      char(10)      NULL       Tunnel type (IPSec/SSL)
+    CD_USU_AUT       char(9)       NULL       *** Corporate user key (chave) ***
+    TX_GR_ACSS       char(254)     NULL       Access group
+
+CRITICAL: The user key column is `CD_USU_AUT`. It is NOT `CD_USU`. An earlier
+attempt using `CD_USU` produced `SQL0206N "CD_USU" is not valid`. Do not
+repeat that mistake.
+
+Default column mapping the app must use out of the box:
+
+    user_column          = CD_USU_AUT
+    timestamp_column     = TS_TRAN
+    source_ip_column     = CD_END_LGC_OGM
+    corporate_ip_column  = CD_END_LGC_CPTV
+    hostname_column      = NM_DSVO
+    device_column        = CD_IDFC_DSVO
+
+All of them must remain overridable via CLI flags and env vars, because the
+operator may want to point the app at a different table.
+
+--------------------------------------------------------------------------------
+## 4. Functional scope (from the user story)
+
+Story: analista de risco / prevencao a fraudes wants a local backtest that
+simulates the current VPN detection rules on historical data, to measure
+effectiveness and support decisions. It must NEVER act on production, LDAP,
+or sensitive data in real time.
+
+The backtest is read-only and produces a report answering:
+
+- Volume total de casos analisados
+- Quantidade de casos classificados como VPN
+- Taxa de falso positivo / falso negativo (report as
+  "not_available_without_validated_labels" when no labeled dataset is
+  configured; do not invent labels)
+- Reproducibility: all parameters logged in the report
+- Output must be readable by non-technical stakeholders (Markdown + JSON)
+
+Cases to implement against the VPN table:
+
+1. Summary of the period
+   - COUNT(*) events, COUNT(DISTINCT user_column) users
+   - filter: timestamp_column >= --start AND timestamp_column < --end
+
+2. Users with more than N distinct source or corporate IPs in the period
+   (N = --distinct-limit, default 2). Report a sample of offending users
+   with their event count and distinct-IP counts.
+
+3. Users with more than N distinct hostnames.
+
+4. Users with more than N distinct device IDs.
+
+5. Users with more than K logins on the same day
+   (K = --daily-login-limit, default 10). Group by user + DATE(timestamp).
+
+6. First VPN policy from the HU:
+   "Existe sessao ativa para mesma chave com VPN + login atual em rede
+    fisica do BB = encerra sessao de VPN no LDAP".
+   Simulate elegibility only. Never call LDAP.
+   Requires a separately configured "physical login" table (schema, table,
+   user column, timestamp column, optional network column + expected value).
+   Join VPN and physical tables on trimmed user key with a time window:
+
+     TRIM(v.user_column) = TRIM(p.user_column)
+     AND p.timestamp_column >= v.timestamp_column
+     AND p.timestamp_column <  v.timestamp_column + <window> HOURS
+     AND p.timestamp_column >= ?   -- --start
+     AND p.timestamp_column <  ?   -- --end
+     AND (optional) TRIM(p.network_column) = ?  -- --physical-network-value
+
+   Window is parameterized by --active-window-hours (1..168, default 8).
+   If the physical table is not configured, report the case with
+   status="skipped" and an explanatory note. All OTHER cases must still run.
+
+Do not implement Redis integration, LDAP action, ETL, or streaming.
+
+--------------------------------------------------------------------------------
+## 5. Project layout to produce
+
+    backtest_vpn_local/
+        pyproject.toml
+        README.md
+        .env.example
+        run_backtest.sh
+        src/backtest_vpn/__init__.py
+        src/backtest_vpn/config.py
+        src/backtest_vpn/db2.py
+        src/backtest_vpn/rules.py
+        src/backtest_vpn/report.py
+        src/backtest_vpn/cli.py
+
+Do NOT include:
+- venv, .venv, __pycache__, or compiled files
+- requirements.txt (the runner uses uv)
+- the credentials JSON
+
+--------------------------------------------------------------------------------
+## 6. `pyproject.toml`
+
+- build-system: setuptools>=68
+- project.name: backtest-vpn-local
+- project.version: 0.1.0
+- description: pt-BR one-liner about local VPN backtest on DB2
+- requires-python: ">=3.9"
+- dependencies: ["ibm-db>=3.2.0"]
+- project.scripts: backtest-vpn = "backtest_vpn.cli:main"
+- [tool.setuptools.packages.find] where = ["src"]
+
+--------------------------------------------------------------------------------
+## 7. `run_backtest.sh` requirements
+
+- `#!/usr/bin/env sh` with `set -eu`.
+- Runnable from anywhere; resolve its own directory with:
+    SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+- If `uv` is not on PATH, print a clear error containing
+  `curl -LsSf https://astral.sh/uv/install.sh | sh` and exit 1.
+- `cd "$SCRIPT_DIR"`.
+- If no positional args are passed, default to
+  `--start 2026-06-01 --end 2026-07-01`.
+- Exec `uv run backtest-vpn "$@"`.
+- No bashisms. No pip. No manual venv.
+- The operator should be able to run:
+    /abs/path/backtest_vpn_local/run_backtest.sh
+  from any working directory.
+
+--------------------------------------------------------------------------------
+## 8. CLI contract (argparse in `cli.py`)
+
+Required flags:
+    --start   YYYY-MM-DD or YYYY-MM-DD HH:MM:SS
+    --end     YYYY-MM-DD or YYYY-MM-DD HH:MM:SS   (exclusive upper bound)
+
+Optional flags (each also readable from env vars, CLI wins):
+
+    --jdbc-url                 DB2_JDBC_URL                default: jdbc:db2://b2db2g5.plexbs2.bb.com.br:61250/B2DB2G5
+    --credentials-file         DB2_CREDENTIALS_FILE        default: ../gravar_dados_vpn/db2_credentials.json
+    --schema                   DB2_SCHEMA                  default: DB2PEP
+    --table                    DB2_TABLE                   default: AUT_CPTV
+    --user-column              VPN_USER_COLUMN             default: CD_USU_AUT
+    --timestamp-column         VPN_TIMESTAMP_COLUMN        default: TS_TRAN
+    --source-ip-column         VPN_SOURCE_IP_COLUMN        default: CD_END_LGC_OGM
+    --corporate-ip-column      VPN_CORPORATE_IP_COLUMN     default: CD_END_LGC_CPTV
+    --hostname-column          VPN_HOSTNAME_COLUMN         default: NM_DSVO
+    --device-column            VPN_DEVICE_COLUMN           default: CD_IDFC_DSVO
+    --physical-schema          PHYSICAL_SCHEMA             default: same as --schema
+    --physical-table           PHYSICAL_TABLE              default: unset -> case 6 is skipped
+    --physical-user-column     PHYSICAL_USER_COLUMN        default: same as --user-column
+    --physical-timestamp-column PHYSICAL_TIMESTAMP_COLUMN  default: same as --timestamp-column
+    --physical-network-column  PHYSICAL_NETWORK_COLUMN     default: unset
+    --physical-network-value   PHYSICAL_NETWORK_VALUE      default: unset
+    --active-window-hours      1..168                      default: 8
+    --distinct-limit           positive int                default: 2
+    --daily-login-limit        positive int                default: 10
+    --sample-limit             positive int                default: 50
+    --output-dir                                            default: reports
+
+.env loading:
+- Look for a `.env` in the app directory. Parse lines KEY=VALUE, ignoring
+  blanks and `#` comments. Use `os.environ.setdefault` so CLI flags win.
+- Never write to `.env`.
+
+Validation:
+- `--end > --start`.
+- All identifier flags must match `^[A-Z][A-Z0-9_]*$` after uppercasing.
+  Raise a ValueError with the offending flag name.
+- Numeric limits must be > 0. Window must be 1..168.
+- Do not build SQL with untrusted identifiers before this regex check.
+
+Behavior:
+- Load credentials JSON via the resolved credentials-file path.
+- Parse the JDBC URL with a regex like:
+    ^jdbc:db2://([^:/]+):(\d+)/([^:;]+).*$
+- Connect using ibm_db with:
+    DATABASE=<db>;HOSTNAME=<host>;PORT=<port>;PROTOCOL=TCPIP;UID=<u>;PWD=<p>;
+- Run all cases (see section 4), producing a payload with:
+    generated_at, parameters, metrics, cases[].
+- Write two files to output-dir:
+    backtest_vpn_YYYYMMDD_HHMMSS.json
+    backtest_vpn_YYYYMMDD_HHMMSS.md
+  Do NOT print samples to stdout. Only print a final line with the paths.
+- Close the DB2 connection in a finally block.
+
+--------------------------------------------------------------------------------
+## 9. `db2.py` requirements
+
+- `connect(config)` opens an ibm_db connection using the assembled DSN.
+- `fetch_all(conn, sql, params=())` prepares, executes with a tuple of
+  params, fetches all rows via `fetch_assoc`, uppercases each key, and
+  returns list[dict].
+- `close(conn)` wraps `ibm_db.close`.
+- No prints. No credential logging.
+
+--------------------------------------------------------------------------------
+## 10. `rules.py` requirements
+
+- Dataclass `BacktestCaseResult(name, status, count, sample, note="")`.
+- Helper `qualified(schema, table) -> "schema.table"`.
+- Helper `ts_params(start, end)` returning two "YYYY-MM-DD HH:MM:SS" strings.
+- Function `get_table_columns(conn, schema, table)` that:
+    1. Tries SYSCAT.COLUMNS with (schema, table) params.
+    2. Falls back to SYSIBM.SYSCOLUMNS with (TBCREATOR, TBNAME) params.
+    3. Returns list[str] of uppercase column names in COLNO order.
+- Function `validate_columns(conn, schema, table, required_columns)` that
+  raises ValueError if any required column is missing, and the message must
+  name the missing columns AND list the available ones. Do not let raw
+  `SQL0206N` bubble up.
+- Function `validate_configured_tables(conn, cfg)` that validates the VPN
+  table columns and, if configured, the physical table columns.
+- Function `run_summary(conn, cfg) -> dict` returning:
+    total_events_analyzed, total_users_analyzed, vpn_classified_cases,
+    false_positive_rate, false_negative_rate
+  The two rates are the string
+  "not_available_without_validated_labels".
+- Function `run_distinct_limit_case(conn, cfg, name, columns, note)` that:
+    - groups by TRIM(user_column)
+    - HAVING any COUNT(DISTINCT NULLIF(TRIM(column), '')) > cfg.distinct_limit
+    - orders by EVENTS DESC
+    - `FETCH FIRST cfg.sample_limit ROWS ONLY`
+    - reports both the count of qualifying users (via a wrapping
+      COUNT subquery on the same SQL) and the sample rows.
+- Function `run_daily_volume_case(conn, cfg)`:
+    - groups by TRIM(user_column), DATE(timestamp_column)
+    - HAVING COUNT(1) > cfg.daily_login_limit
+    - top N sample by LOGIN_COUNT DESC
+- Function `run_active_vpn_plus_physical_login_case(conn, cfg)`:
+    - if physical table missing -> status="skipped".
+    - otherwise, join per section 4 formula.
+    - the network filter is an extra "AND TRIM(p.<col>) = ?" only when
+      both network_column and network_value are configured.
+- Function `run_backtest_cases(conn, cfg)`:
+    1. calls validate_configured_tables
+    2. computes metrics = run_summary
+    3. builds the list of 5 cases (three distinct-limit variants for IPs,
+       hostnames, devices; the daily-volume case; the physical-login case).
+    4. returns (metrics, cases).
+
+All SQL identifiers must be interpolated only AFTER passing the identifier
+regex. Only literal values are bound with `?`.
+
+--------------------------------------------------------------------------------
+## 11. `report.py` requirements
+
+- `json_default(value)` handling datetime, Path, and dataclasses.
+- `write_json(path, payload)` writes UTF-8 pretty-printed JSON.
+- `write_markdown(path, payload)` produces a pt-BR report:
+    - `# Relatorio preliminar - Backtest VPN`
+    - `## Parametros` with period, VPN table, active window, distinct limit,
+      daily login limit
+    - `## Metricas consolidadas` as a Markdown table
+    - `## Casos executados` as a Markdown table
+      columns: Caso | Status | Quantidade | Observacao
+    - `## Amostras` explaining samples live in the JSON
+    - `## Premissas e limitacoes` stating: read-only, no LDAP action,
+      FP/FN unavailable without labeled base, session-active window is
+      parameterized because the historical base may not include an explicit
+      session-end event.
+
+--------------------------------------------------------------------------------
+## 12. `config.py` requirements
+
+- Constants DEFAULT_JDBC_URL, DEFAULT_CREDENTIALS_FILE with the values above.
+- Frozen dataclasses:
+    Db2ConnectionConfig(hostname, port, database, username, password)
+    VpnTableConfig(schema, table, user_column, timestamp_column,
+                   source_ip_column, corporate_ip_column,
+                   hostname_column, device_column)
+    PhysicalLoginTableConfig(schema, table, user_column, timestamp_column,
+                             network_column, network_value)
+    BacktestConfig(db2, vpn_table, physical_table, start, end,
+                   active_window_hours, distinct_limit, daily_login_limit,
+                   sample_limit, output_dir)
+- Helpers:
+    load_dotenv_file(path)
+    parse_jdbc_url(url) -> (host, port, database)
+    load_credentials(path) -> (username, password)
+    parse_datetime(value) accepting the two formats
+    normalize_identifier(value, label) -> uppercased identifier or raise
+    resolve_path(path, base_dir) -> absolute Path
+
+--------------------------------------------------------------------------------
+## 13. `README.md` (pt-BR)
+
+- Objetivo do app.
+- Pre-requisitos: uv, DB2 credentials JSON em `../gravar_dados_vpn/`,
+  conectividade com b2db2g5.plexbs2.bb.com.br:61250.
+- Instalacao: install `uv`.
+- Execucao minima:
+    ./run_backtest.sh --start 2026-06-01 --end 2026-07-01 \
+        --schema DB2PEP --table AUT_CPTV --user-column CD_USU_AUT
+- Politica principal com login fisico: exemplo do run com todos os
+  --physical-*.
+- Tabela dos casos preliminares implementados.
+- Nota clara: taxas FP/FN so ficam disponiveis com base validada.
+- Nota de seguranca: read-only, sem acao no LDAP, sem dados sensiveis em
+  tempo real, credenciais somente pelo arquivo JSON com chmod 600.
+
+--------------------------------------------------------------------------------
+## 14. `.env.example`
+
+Include every env var listed in section 8, with default values (no secrets),
+and a comment header stating: "Do not put real credentials here; keep using
+the JSON credentials file."
+
+--------------------------------------------------------------------------------
+## 15. Non-goals and hard rules (do not violate)
+
+- No pip, no requirements.txt in the runner, no manual venv creation.
+- No Redis, no LDAP, no writes to DB2.
+- No hardcoded passwords, no printing of credentials or connection strings.
+- No `SELECT *` on samples; project explicit columns.
+- No f-string interpolation of user-supplied values into SQL literals; use
+  `?` binding for values, and the identifier regex for column/schema/table.
+- No dependence on being able to run the code during authoring; produce
+  files that are internally consistent.
+
+--------------------------------------------------------------------------------
+## 16. "How to run" block to print after the last file
+
+Print exactly these commands as the final block:
+
+    # 1. Install uv (once)
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+
+    # 2. Place backtest_vpn_local/ as a sibling of gravar_dados_vpn/, e.g.:
+    #    /home/wsl/HU11202222/backtest_vpn_local/
+
+    # 3. Run from anywhere:
+    /home/wsl/HU11202222/backtest_vpn_local/run_backtest.sh \
+        --start 2026-06-01 --end 2026-07-01
+
+    # 4. Reports are written to:
+    /home/wsl/HU11202222/backtest_vpn_local/reports/
+
+--------------------------------------------------------------------------------
+## 17. Known past mistakes to actively avoid
+
+- Defaulting the user column to `CD_USU`. The correct default is `CD_USU_AUT`.
+- Building SQL before validating column identifiers, leading to opaque
+  `SQL0206N` errors instead of a helpful "column X missing; available: ...".
+- Providing a runner that assumed `pip` worked. The corporate PyPI proxy
+  prompts for auth and hangs. Use `uv` only.
+- Leaking the DB2 password in `.env.example`, README examples, or logs.
+- Trying to detect the catalog dialect at runtime by string sniffing the
+  server; always try SYSCAT first, fall back to SYSIBM.
+- Using bashisms in a `#!/usr/bin/env sh` script.
+
+Now produce all files.
