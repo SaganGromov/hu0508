@@ -1,6 +1,0 @@
-Metadata-Version: 2.4
-Name: backtest-vpn-local
-Version: 0.1.0
-Summary: Aplicacao local para backtest preliminar de VPN em DB2
-Requires-Python: >=3.9
-Requires-Dist: ibm-db>=3.2.0
